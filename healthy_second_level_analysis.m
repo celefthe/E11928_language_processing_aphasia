@@ -32,7 +32,7 @@ matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'healthy';
 
 %% One-sample t-test for incongruency effect
 
-matlabbatch{3}.cfg_basicio.file_dir.dir_ops.2222cfg_mkdir.parent(1) = cfg_dep('Make Directory: Make Directory ''healthy''', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','dir'));
+matlabbatch{3}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent(1) = cfg_dep('Make Directory: Make Directory ''healthy''', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','dir'));
 matlabbatch{3}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruency';
 
 % factorial design for one-sample t-test on delta constrast of incogruency
@@ -42,7 +42,7 @@ matlabbatch{4}.spm.stats.factorial_design.dir(1) = cfg_dep('Make Directory: Make
 % get boosted contrast for incongruency
 boosted_inc_con =  {}
 for idx = 1:size(subj, 1)
-     boosted_inc_con{idx} = [subjects{idx} filesep 'stats/hrf_boost/boost_con_0004.nii,1']
+     boosted_inc_con{idx} = [subjects{idx} filesep 'stats/hrf_boost/sboost_con_0004.nii,1']
 end
 
 matlabbatch{4}.spm.stats.factorial_design.des.t1.scans = boosted_inc_con';
