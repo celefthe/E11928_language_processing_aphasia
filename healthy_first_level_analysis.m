@@ -154,7 +154,7 @@ for subject = 1:size(subj,1)
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.wrap = [0 0 0];
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.prefix = 'oldnorm_';
         matlabbatch{11}.spm.spatial.smooth.data(1) = cfg_dep('Old Normalise: Estimate & Write: Normalised Images (Subj 1)', substruct('.','val', '{}',{10}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','files'));
-        matlabbatch{11}.spm.spatial.smooth.fwhm = [6 6 6];
+        matlabbatch{11}.spm.spatial.smooth.fwhm = [4 4 4];
         matlabbatch{11}.spm.spatial.smooth.dtype = 0;
         matlabbatch{11}.spm.spatial.smooth.im = 0;
         matlabbatch{11}.spm.spatial.smooth.prefix = 'smooth_';
@@ -241,8 +241,8 @@ for subject = 1:size(subj,1)
 
         stat_batch = spm_jobman('run',matlabbatch);
         boosted_files = spmup_hrf_boost([bids_dir filesep 'derivatives' filesep subj(subject).name filesep 'stats' filesep 'SPM.mat']);
-        spmup_smooth_boostedfiles(boosted_files{1},[6 6 6]); % smooth boosted beta files
-        spmup_smooth_boostedfiles(boosted_files{2},[6 6 6]); % smooth boosted con files
+        spmup_smooth_boostedfiles(boosted_files{1},[8 8 8]); % smooth boosted beta files
+        spmup_smooth_boostedfiles(boosted_files{2},[8 8 8]); % smooth boosted con files
         clear matlabbatch; 
         cd(bids_dir)
         
