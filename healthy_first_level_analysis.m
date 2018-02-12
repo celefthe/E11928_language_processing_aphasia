@@ -237,7 +237,17 @@ for subject = 1:size(subj,1)
         matlabbatch{4}.spm.stats.con.consess{6}.tcon.name = 'incongruency trial variations';
         matlabbatch{4}.spm.stats.con.consess{6}.tcon.weights = [0 0 -1 0 0 0 0.333333333333333 0 0 0 0.333333333333333 0 0 0 0.333333333333333 0];
         matlabbatch{4}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
+        matlabbatch{4}.spm.stats.con.consess{7}.tcon.name = 'phonology-hrf';
+        matlabbatch{4}.spm.stats.con.consess{7}.tcon.weights = [-1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0];
+        matlabbatch{4}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
+        matlabbatch{4}.spm.stats.con.consess{8}.tcon.name = 'semantic-hrf';
+        matlabbatch{4}.spm.stats.con.consess{8}.tcon.weights = [-1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0];
+        matlabbatch{4}.spm.stats.con.consess{8}.tcon.sessrep = 'none';
+        matlabbatch{4}.spm.stats.con.consess{9}.tcon.name = 'unrelated-hrf';
+        matlabbatch{4}.spm.stats.con.consess{9}.tcon.weights = [-1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0];
+        matlabbatch{4}.spm.stats.con.consess{9}.tcon.sessrep = 'none';
         matlabbatch{4}.spm.stats.con.delete = 0;
+        
 
         stat_batch = spm_jobman('run',matlabbatch);
         boosted_files = spmup_hrf_boost([bids_dir filesep 'derivatives' filesep subj(subject).name filesep 'stats' filesep 'SPM.mat']);
