@@ -1,4 +1,4 @@
-%% fMRI second level data analysis for healthy subjects only
+%% fMRI second level data analysis -- check if model works 
 
 % clear memoery, load SPM defaults and job manager
 clear variables
@@ -24,32 +24,20 @@ for idx = 1:size(subj,1)
 end
 
 %-----------------------------------------------------------------------
-matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = {'/Users/celefthe/Programming/projects/E11928_language_processing_aphasia/derivatives'};
+matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = {[bids_dir filesep 'derivatives']};
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'group';
 matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent(1) = cfg_dep('Make Directory: Make Directory ''group''', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','dir'));
 matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'healthy';
 matlabbatch{3}.spm.stats.factorial_design.dir(1) = cfg_dep('Make Directory: Make Directory ''healthy''', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','dir'));
 
-%task_hrf_con =  {};
-%for idx = 1:size(subj, 1)
-%     task_hrf_con{idx} = [subjects{idx} filesep 'stats/con_0002.nii,1'];
-%end
-
-%task_hrf_boosted_con =  {};
-%for idx = 1:size(subj, 1)
-%     task_hrf_boosted_con{idx} = [subjects{idx} filesep 'stats/hrf_boost/sboost_con_0002.nii,1'];
-%end
-
-%matlabbatch{3}.spm.stats.factorial_design.des.pt.pair.scans = {
-%                                                               task_hrf_con',
-%                                                               task_hrf_boosted_con'
-%                                                               };
+% Paired t-test for each hrf/hrf-boost pair of scans - look at task effect
 for idx = 1:size(subj, 1)
      matlabbatch{3}.spm.stats.factorial_design.des.pt.pair(idx).scans = {
         [subjects{idx} filesep 'stats/con_0002.nii,1'],
         [subjects{idx} filesep 'stats/hrf_boost/sboost_con_0002.nii,1']
      };
 end
+
 matlabbatch{3}.spm.stats.factorial_design.des.pt.gmsca = 0;
 matlabbatch{3}.spm.stats.factorial_design.des.pt.ancova = 0;
 matlabbatch{3}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
@@ -60,12 +48,16 @@ matlabbatch{3}.spm.stats.factorial_design.masking.em = {''};
 matlabbatch{3}.spm.stats.factorial_design.globalc.g_omit = 1;
 matlabbatch{3}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
 matlabbatch{3}.spm.stats.factorial_design.globalm.glonorm = 1;
+
 matlabbatch{4}.spm.stats.fmri_est.spmmat(1) = cfg_dep('Factorial design specification: SPM.mat File', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','spmmat'));
 matlabbatch{4}.spm.stats.fmri_est.write_residuals = 0;
 matlabbatch{4}.spm.stats.fmri_est.method.Classical = 1;
+
 matlabbatch{5}.spm.stats.con.spmmat(1) = cfg_dep('Model estimation: SPM.mat File', substruct('.','val', '{}',{4}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','spmmat'));
 matlabbatch{5}.spm.stats.con.consess{1}.tcon.name = 'boost effect';
-matlabbatch{5}.spm.stats.con.consess{1}.tcon.weights = [-1 1 zeros(1,size(subjects)];
+
+% contrast hrf vs hrf-boost 
+matlabbatch{5}.spm.stats.con.consess{1}.tcon.weights = [-1 1 zeros(1, size(subj,1))];
 matlabbatch{5}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{5}.spm.stats.con.delete = 0;
 
