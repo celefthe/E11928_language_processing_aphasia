@@ -1,10 +1,21 @@
 %% fMRI data analysis for healthy subjects only
 
+
 % clear memoery, load SPM defaults and job manager
 clear variables
 spm_jobman('initcfg');
 spmroot = fileparts(which('spm'));
 spm('Defaults','fmri')
+
+% if matlab is ran from the cmd, prevent graphics window from opening
+if ~usejava('desktop')
+    spm_get_defaults('cmdline',true);
+end
+
+% set memory settings to improve performance 
+spm_get_defaults('stats.maxmem', 2^31); 
+spm_get_defaults('stats.resmem', true);
+
 skip = 3; % how many initial volumes to skip
 
 % the scripts assumes we run from inside the code directory
@@ -153,8 +164,9 @@ for subject = 1:size(subj,1)
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.interp = 4;
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.wrap = [0 0 0];
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.prefix = 'oldnorm_';
+        
         matlabbatch{11}.spm.spatial.smooth.data(1) = cfg_dep('Old Normalise: Estimate & Write: Normalised Images (Subj 1)', substruct('.','val', '{}',{10}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','files'));
-        matlabbatch{11}.spm.spatial.smooth.fwhm = [4 4 4];
+        matlabbatch{11}.spm.spatial.smooth.fwhm = [6 6 6];
         matlabbatch{11}.spm.spatial.smooth.dtype = 0;
         matlabbatch{11}.spm.spatial.smooth.im = 0;
         matlabbatch{11}.spm.spatial.smooth.prefix = 'smooth_';
@@ -193,14 +205,14 @@ for subject = 1:size(subj,1)
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).orth = 1;
         end
         
-        if isfield(fmri_events,'Errors_onset')
+        if isfield(fmri_events,'Error_onset')
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).name = 'Errors';
-            errors = sum(fmri_events.Errors_onset == 'nil     ',2) ~= 8;
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).onset = str2num(fmri_events.Errors_onset(errors,:));
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).duration = str2num(fmri_events.Errors_duration(errors,:));
+            charn = size(fmri_events.Error_onset); % because of 'nil' sees entries as chars            
+            errors = sum(fmri_events.Error_onset == ['nil' repmat(' ',[1 charn(2)-3])],2) ~= charn(2);
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).onset = str2num(fmri_events.Error_onset(errors,:));
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).duration = str2num(fmri_events.Error_duration(errors,:));
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).tmod = 0;
         end
-        
         
         matlabbatch{2}.spm.stats.fmri_spec.sess.multi = {''};
         matlabbatch{2}.spm.stats.fmri_spec.sess.regress = struct('name', {}, 'val', {});
@@ -247,10 +259,21 @@ for subject = 1:size(subj,1)
         matlabbatch{4}.spm.stats.con.consess{9}.tcon.weights = [-1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0];
         matlabbatch{4}.spm.stats.con.consess{9}.tcon.sessrep = 'none';
         matlabbatch{4}.spm.stats.con.delete = 0;
-        
-
         stat_batch = spm_jobman('run',matlabbatch);
-        boosted_files = spmup_hrf_boost([bids_dir filesep 'derivatives' filesep subj(subject).name filesep 'stats' filesep 'SPM.mat']);
+
+        % re-run the stats batch but on un-smoothed data and smooth the
+        % boosted beta and con
+
+        matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
+        matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'boosted_stats';
+        
+        matlabbatch{2}.spm.stats.fmri_spec.dir(1) = cfg_dep('Make Directory: Make Directory ''boosted_stats''', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','dir'));
+        for f=1:size(preprocess{11}.files,1)
+            matlabbatch{2}.spm.stats.fmri_spec.sess.scans(f,:) = preprocess{10}.files(f);
+        end
+        
+        stat_batch = spm_jobman('run',matlabbatch);
+        boosted_files = spmup_hrf_boost([bids_dir filesep 'derivatives' filesep subj(subject).name filesep 'boosted_stats' filesep 'SPM.mat']);
         spmup_smooth_boostedfiles(boosted_files{1},[8 8 8]); % smooth boosted beta files
         spmup_smooth_boostedfiles(boosted_files{2},[8 8 8]); % smooth boosted con files
         clear matlabbatch; 
@@ -258,9 +281,3 @@ for subject = 1:size(subj,1)
         
     end
 end
-    
-
-
-
-
-        
