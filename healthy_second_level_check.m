@@ -34,7 +34,7 @@ matlabbatch{3}.spm.stats.factorial_design.dir(1) = cfg_dep('Make Directory: Make
 for idx = 1:size(subj, 1)
      matlabbatch{3}.spm.stats.factorial_design.des.pt.pair(idx).scans = {
         [subjects{idx} filesep 'stats/con_0002.nii,1'],
-        [subjects{idx} filesep 'stats/hrf_boost/sboost_con_0002.nii,1']
+        [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0002.nii,1']
      };
 end
 

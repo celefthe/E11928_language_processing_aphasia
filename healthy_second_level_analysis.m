@@ -42,7 +42,7 @@ matlabbatch{4}.spm.stats.factorial_design.dir(1) = cfg_dep('Make Directory: Make
 % get boosted contrast for incongruency
 boosted_inc_con =  {};
 for idx = 1:size(subj, 1)
-     boosted_inc_con{idx} = [subjects{idx} filesep 'stats/hrf_boost/sboost_con_0004.nii,1'];
+     boosted_inc_con{idx} = [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0004.nii,1'];
 end
 
 matlabbatch{4}.spm.stats.factorial_design.des.t1.scans = boosted_inc_con';
@@ -76,7 +76,7 @@ matlabbatch{8}.spm.stats.factorial_design.dir(1) = cfg_dep('Make Directory: Make
 % get boosted contrast for semantic
 boosted_semantic =  {};
 for idx = 1:size(subj, 1)
-     boosted_semantic{idx} = [subjects{idx} filesep 'stats/hrf_boost/sboost_con_0008.nii,1'];
+     boosted_semantic{idx} = [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0008.nii,1'];
 end
 
 matlabbatch{8}.spm.stats.factorial_design.des.t1.scans = boosted_semantic';
@@ -111,7 +111,7 @@ matlabbatch{12}.spm.stats.factorial_design.dir(1) = cfg_dep('Make Directory: Mak
 % get boosted contrast for phono
 boosted_phono =  {};
 for idx = 1:size(subj, 1)
-     boosted_phono{idx} = [subjects{idx} filesep 'stats/hrf_boost/sboost_con_0007.nii,1'];
+     boosted_phono{idx} = [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0007.nii,1'];
 end
 
 matlabbatch{12}.spm.stats.factorial_design.des.t1.scans = boosted_phono';
@@ -146,7 +146,7 @@ matlabbatch{16}.spm.stats.factorial_design.dir(1) = cfg_dep('Make Directory: Mak
 % get boosted contrast for semantic
 boosted_unrelated =  {};
 for idx = 1:size(subj, 1)
-     boosted_unrelated{idx} = [subjects{idx} filesep 'stats/hrf_boost/sboost_con_0009.nii,1'];
+     boosted_unrelated{idx} = [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0009.nii,1'];
 end
 
 matlabbatch{16}.spm.stats.factorial_design.des.t1.scans = boosted_semantic';
