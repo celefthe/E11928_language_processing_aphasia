@@ -1,6 +1,6 @@
 %% fMRI data analysis for healthy subjects only
 
-
+%% set up environment
 % clear memoery, load SPM defaults and job manager
 clear variables
 spm_jobman('initcfg');
@@ -29,12 +29,14 @@ bids_dir = pwd;
 subj = dir('sub*');
 index = 1;
 
-% do the pre-processing
+%% first level analysis
 for subject = 1:size(subj,1)
     if strcmp(subj(subject).name(5:11),'healthy')
-        % work into the derivative directory, create, unzip, set (0,0,0) coordinate
+        % work in the derivative directory (create if not exist)
         mkdir([bids_dir filesep 'derivatives' filesep subj(subject).name])
         cd(subj(subject).name)
+        
+        % unzip anatomical and functional images
         cd('anat'); file = dir('*.nii.gz');
         T1name=gunzip(file.name, [bids_dir filesep 'derivatives' filesep subj(subject).name filesep 'anat']);
         cd ..
@@ -52,24 +54,30 @@ for subject = 1:size(subj,1)
         for f=1+skip:size(ThreeD_names,1)
             fMRI{f-skip} = ThreeD_names(f).fname;
         end
-        fMRI = fMRI'; 
+        
+        % set the (0,0,0) coordinate
+        fMRI = fMRI';
         P = fMRI;
         P{size(fMRI,1)+1}=cell2mat(T1name);
         spmup_auto_reorient(P,size(P,1));
         clear file bold_file events fMRIname P 
         
-        % now build the matlab batch
+        %% preprocessing batch
         for s=(1+skip):size(ThreeD_names,1)
             matlabbatch{1}.spm.temporal.st.scans{1}((s-skip),:) = {ThreeD_names(s).fname};
         end        
         matlabbatch{1}.spm.temporal.st.nslices = 30;
         matlabbatch{1}.spm.temporal.st.tr = 2.5;
         matlabbatch{1}.spm.temporal.st.ta = 1.91666666666667;
-        matlabbatch{1}.spm.temporal.st.so = [0 1.209 0.0806 1.2896 0.1612 1.3702 0.2418 1.4508 0.3224 1.5314 0.403 1.612 0.4836 1.6926 0.5642 1.7732 0.6448 1.8538 0.7254 1.9344 0.806 2.015 0.8866 2.0956 0.9672 2.1762 1.0478 2.2568 1.1284 2.3374];
+        matlabbatch{1}.spm.temporal.st.so = ...
+            [0 1.209 0.0806 1.2896 0.1612 1.3702 0.2418 1.4508 0.3224 1.5314 0.403 1.612 0.4836 1.6926 0.5642 1.7732 ...
+            0.6448 1.8538 0.7254 1.9344 0.806 2.015 0.8866 2.0956 0.9672 2.1762 1.0478 2.2568 1.1284 2.3374];
         matlabbatch{1}.spm.temporal.st.refslice = matlabbatch{1}.spm.temporal.st.so(2);
         matlabbatch{1}.spm.temporal.st.prefix = 'sl-timing_';
         
-        matlabbatch{2}.spm.spatial.realign.estwrite.data{1}(1) = cfg_dep('Slice Timing: Slice Timing Corr. Images (Sess 1)', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','files'));
+        matlabbatch{2}.spm.spatial.realign.estwrite.data{1}(1) = ...
+            cfg_dep('Slice Timing: Slice Timing Corr. Images (Sess 1)', substruct('.','val', '{}',{1}, '.','val',...
+            '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','files'));
         matlabbatch{2}.spm.spatial.realign.estwrite.eoptions.quality = 1;
         matlabbatch{2}.spm.spatial.realign.estwrite.eoptions.sep = 4;
         matlabbatch{2}.spm.spatial.realign.estwrite.eoptions.fwhm = 5;
@@ -83,20 +91,30 @@ for subject = 1:size(subj,1)
         matlabbatch{2}.spm.spatial.realign.estwrite.roptions.mask = 1;
         matlabbatch{2}.spm.spatial.realign.estwrite.roptions.prefix = 'rp_';
         
-        matlabbatch{3}.spm.spatial.coreg.estimate.ref(1) = cfg_dep('Realign: Estimate & Reslice: Mean Image', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rmean'));
+        matlabbatch{3}.spm.spatial.coreg.estimate.ref(1) = ...
+            cfg_dep('Realign: Estimate & Reslice: Mean Image', ...
+            substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','rmean'));
         matlabbatch{3}.spm.spatial.coreg.estimate.source = T1name;
         matlabbatch{3}.spm.spatial.coreg.estimate.other = {''};
         matlabbatch{3}.spm.spatial.coreg.estimate.eoptions.cost_fun = 'nmi';
         matlabbatch{3}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
-        matlabbatch{3}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
+        matlabbatch{3}.spm.spatial.coreg.estimate.eoptions.tol = ...
+            [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
         matlabbatch{3}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
         
-        matlabbatch{4}.spm.util.checkreg.data(1) = cfg_dep('Coregister: Estimate: Coregistered Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','cfiles'));
+        matlabbatch{4}.spm.util.checkreg.data(1) = ...
+            cfg_dep('Coregister: Estimate: Coregistered Images', ...
+            substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','cfiles'));
         matlabbatch{5}.spm.util.print.fname = 'coregistered';
         matlabbatch{5}.spm.util.print.fig.figname = 'Graphics';
         matlabbatch{5}.spm.util.print.opts = 'pdf';
         
-        matlabbatch{6}.spm.spatial.preproc.channel.vols(1) = cfg_dep('Coregister: Estimate: Coregistered Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','cfiles'));
+        matlabbatch{6}.spm.spatial.preproc.channel.vols(1) = ...
+            cfg_dep('Coregister: Estimate: Coregistered Images', ...
+            substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','cfiles'));
         matlabbatch{6}.spm.spatial.preproc.channel.biasreg = 0.001;
         matlabbatch{6}.spm.spatial.preproc.channel.biasfwhm = 60;
         matlabbatch{6}.spm.spatial.preproc.channel.write = [0 1];
@@ -132,24 +150,41 @@ for subject = 1:size(subj,1)
         matlabbatch{6}.spm.spatial.preproc.warp.samp = 3;
         matlabbatch{6}.spm.spatial.preproc.warp.write = [0 1];
         
-        matlabbatch{7}.spm.util.checkreg.data(1) = cfg_dep('Segment: c1 Images', substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{1}, '.','c', '()',{':'}));
-        matlabbatch{7}.spm.util.checkreg.data(2) = cfg_dep('Segment: c2 Images', substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','tiss', '()',{2}, '.','c', '()',{':'}));
+        matlabbatch{7}.spm.util.checkreg.data(1) = ...
+            cfg_dep('Segment: c1 Images', substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','tiss', '()',{1}, '.','c', '()',{':'}));
+        matlabbatch{7}.spm.util.checkreg.data(2) = cfg_dep('Segment: c2 Images', ...
+            substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','tiss', '()',{2}, '.','c', '()',{':'}));
         matlabbatch{8}.spm.util.print.fname = 'segmented';
         matlabbatch{8}.spm.util.print.fig.figname = 'Graphics';
         matlabbatch{8}.spm.util.print.opts = 'pdf';
         
-        matlabbatch{9}.spm.spatial.normalise.write.subj.def(1) = cfg_dep('Segment: Forward Deformations', substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','fordef', '()',{':'}));
-        matlabbatch{9}.spm.spatial.normalise.write.subj.resample(1) = cfg_dep('Coregister: Estimate: Coregistered Images', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','cfiles'));
+        matlabbatch{9}.spm.spatial.normalise.write.subj.def(1) = ...
+            cfg_dep('Segment: Forward Deformations', ...
+            substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','fordef', '()',{':'}));
+        matlabbatch{9}.spm.spatial.normalise.write.subj.resample(1) = ...
+            cfg_dep('Coregister: Estimate: Coregistered Images', ...
+            substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','cfiles'));
         matlabbatch{9}.spm.spatial.normalise.write.woptions.bb = [-78 -112 -70
             78 76 85];
         matlabbatch{9}.spm.spatial.normalise.write.woptions.vox = [2 2 2];
         matlabbatch{9}.spm.spatial.normalise.write.woptions.interp = 4;
         matlabbatch{9}.spm.spatial.normalise.write.woptions.prefix = 'normal_';
         
-        matlabbatch{10}.spm.tools.oldnorm.estwrite.subj.source(1) = cfg_dep('Realign: Estimate & Reslice: Mean Image', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rmean'));
+        matlabbatch{10}.spm.tools.oldnorm.estwrite.subj.source(1) = ...
+            cfg_dep('Realign: Estimate & Reslice: Mean Image', ...
+            substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','rmean'));
         matlabbatch{10}.spm.tools.oldnorm.estwrite.subj.wtsrc = '';
-        matlabbatch{10}.spm.tools.oldnorm.estwrite.subj.resample(1) = cfg_dep('Realign: Estimate & Reslice: Realigned Images (Sess 1)', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','sess', '()',{1}, '.','cfiles'));
-        matlabbatch{10}.spm.tools.oldnorm.estwrite.eoptions.template = {[spmroot filesep 'toolbox' filesep 'OldNorm' filesep 'EPI.nii,1']};
+        matlabbatch{10}.spm.tools.oldnorm.estwrite.subj.resample(1) = ...
+            cfg_dep('Realign: Estimate & Reslice: Realigned Images (Sess 1)', ...
+            substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','sess', '()',{1}, '.','cfiles'));
+        matlabbatch{10}.spm.tools.oldnorm.estwrite.eoptions.template = ...
+            {[spmroot filesep 'toolbox' filesep 'OldNorm' filesep 'EPI.nii,1']};
         matlabbatch{10}.spm.tools.oldnorm.estwrite.eoptions.weight = '';
         matlabbatch{10}.spm.tools.oldnorm.estwrite.eoptions.smosrc = 8;
         matlabbatch{10}.spm.tools.oldnorm.estwrite.eoptions.smoref = 0;
@@ -165,22 +200,50 @@ for subject = 1:size(subj,1)
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.wrap = [0 0 0];
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.prefix = 'oldnorm_';
         
-        matlabbatch{11}.spm.spatial.smooth.data(1) = cfg_dep('Old Normalise: Estimate & Write: Normalised Images (Subj 1)', substruct('.','val', '{}',{10}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','files'));
+
+    
+        matlabbatch{11}.spm.spatial.smooth.data(1) = ...
+            cfg_dep('Old Normalise: Estimate & Write: Normalised Images (Subj 1)', ...
+            substruct('.','val', '{}',{10}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('()',{1}, '.','files'));
         matlabbatch{11}.spm.spatial.smooth.fwhm = [6 6 6];
         matlabbatch{11}.spm.spatial.smooth.dtype = 0;
         matlabbatch{11}.spm.spatial.smooth.im = 0;
         matlabbatch{11}.spm.spatial.smooth.prefix = 'smooth_';
         
-        preprocess = spm_jobman('run',matlabbatch);
+        % low smooth to compensate for hrf boost
+        matlabbatch{12}.spm.spatial.smooth.data(1) = ...
+            cfg_dep('Old Normalise: Estimate & Write: Normalised Images (Subj 1)', ...
+            substruct('.','val', '{}',{10}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('()',{1}, '.','files'));
+        matlabbatch{12}.spm.spatial.smooth.fwhm = [2 2 2];
+        matlabbatch{12}.spm.spatial.smooth.dtype = 0;
+        matlabbatch{12}.spm.spatial.smooth.im = 0;
+        matlabbatch{12}.spm.spatial.smooth.prefix = 'low_smooth_';
+        
+        try
+            preprocess = spm_jobman('run',matlabbatch);
+        catch
+           warning('Could not calculate preprocess %s', subj(subject).name);
+           cd(bids_dir);
+           continue;
+        end
+        
         clear matlabbatch;
         
+        
+        %% stats batch
         flags = struct('motion_parameters','on','globals','on','volume_distance','off','movie','off');
         new_file = spmup_realign_qa(preprocess{11}.files,flags);
         
-        matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
+        matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
+            {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
         matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'stats';
         
-        matlabbatch{2}.spm.stats.fmri_spec.dir(1) = cfg_dep('Make Directory: Make Directory ''stats''', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','dir'));
+        matlabbatch{2}.spm.stats.fmri_spec.dir(1) = ...
+            cfg_dep('Make Directory: Make Directory ''stats''', ...
+            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','dir'));
         matlabbatch{2}.spm.stats.fmri_spec.timing.units = 'secs';
         matlabbatch{2}.spm.stats.fmri_spec.timing.RT = 2.5;
         matlabbatch{2}.spm.stats.fmri_spec.timing.fmri_t = 30;
@@ -189,7 +252,7 @@ for subject = 1:size(subj,1)
             matlabbatch{2}.spm.stats.fmri_spec.sess.scans(f,:) = preprocess{11}.files(f);
         end
         
-        % fmri_events.Condition = 1,2,3,4 = SS, CP,CS, US        
+        % fmri_events.Condition = 1,2,3,4 = SS, CP,CS, US
         matlabbatch{2}.spm.stats.fmri_spec.sess.cond(1).name = 'SS';
         matlabbatch{2}.spm.stats.fmri_spec.sess.cond(2).name = 'CP';
         matlabbatch{2}.spm.stats.fmri_spec.sess.cond(3).name = 'CS';
@@ -197,23 +260,26 @@ for subject = 1:size(subj,1)
 
         for cond = 1:4
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).onset = fmri_events.Onset(fmri_events.Condition==cond);
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).duration = mean(fmri_events.Duration(fmri_events.Condition==cond));
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).duration = ...
+                mean(fmri_events.Duration(fmri_events.Condition==cond));
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).tmod = 0;
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).pmod.name = 'RT';
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).pmod.param = fmri_events.Duration(fmri_events.Condition==cond) - mean(fmri_events.Duration(fmri_events.Condition==cond));
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).pmod.param = ...
+                fmri_events.Duration(fmri_events.Condition==cond) - ...
+                mean(fmri_events.Duration(fmri_events.Condition==cond));
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).pmod.poly = 1;
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).orth = 1;
         end
         
         if isfield(fmri_events,'Error_onset')
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).name = 'Errors';
-            charn = size(fmri_events.Error_onset); % because of 'nil' sees entries as chars            
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).name = 'Error';
+            charn = size(fmri_events.Error_onset); % because of 'nil' sees entries as chars
             errors = sum(fmri_events.Error_onset == ['nil' repmat(' ',[1 charn(2)-3])],2) ~= charn(2);
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).onset = str2num(fmri_events.Error_onset(errors,:));
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).duration = str2num(fmri_events.Error_duration(errors,:));
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).tmod = 0;
         end
-        
+
         matlabbatch{2}.spm.stats.fmri_spec.sess.multi = {''};
         matlabbatch{2}.spm.stats.fmri_spec.sess.regress = struct('name', {}, 'val', {});
         matlabbatch{2}.spm.stats.fmri_spec.sess.multi_reg(1) = {new_file};
@@ -225,12 +291,18 @@ for subject = 1:size(subj,1)
         matlabbatch{2}.spm.stats.fmri_spec.mthresh = 0.8;
         matlabbatch{2}.spm.stats.fmri_spec.mask = {''};
         matlabbatch{2}.spm.stats.fmri_spec.cvi = 'AR(1)';
-        
-        matlabbatch{3}.spm.stats.fmri_est.spmmat(1) = cfg_dep('fMRI model specification: SPM.mat File', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','spmmat'));
+
+        matlabbatch{3}.spm.stats.fmri_est.spmmat(1) = ...
+            cfg_dep('fMRI model specification: SPM.mat File', ...
+            substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','spmmat'));
         matlabbatch{3}.spm.stats.fmri_est.write_residuals = 0;
         matlabbatch{3}.spm.stats.fmri_est.method.Classical = 1;
-        
-        matlabbatch{4}.spm.stats.con.spmmat(1) = cfg_dep('Model estimation: SPM.mat File', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','spmmat'));
+
+        matlabbatch{4}.spm.stats.con.spmmat(1) = ...
+            cfg_dep('Model estimation: SPM.mat File', ...
+            substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','spmmat'));
         matlabbatch{4}.spm.stats.con.consess{1}.tcon.name = 'task';
         matlabbatch{4}.spm.stats.con.consess{1}.tcon.weights = [1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0];
         matlabbatch{4}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
@@ -241,13 +313,25 @@ for subject = 1:size(subj,1)
         matlabbatch{4}.spm.stats.con.consess{3}.tcon.weights = [0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0];
         matlabbatch{4}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
         matlabbatch{4}.spm.stats.con.consess{4}.tcon.name = 'incongruency';
-        matlabbatch{4}.spm.stats.con.consess{4}.tcon.weights = [-1 0 -1 0 0.333333333333333 0 0.333333333333333 0 0.333333333333333 0 0.333333333333333 0 0.333333333333333 0 0.333333333333333 0];
+        matlabbatch{4}.spm.stats.con.consess{4}.tcon.weights = ...
+            [-1 0 -1 0 ...
+            0.333333333333333 0 0.333333333333333 0 ...
+            0.333333333333333 0 0.333333333333333 0 ...
+            0.333333333333333 0 0.333333333333333 0];
         matlabbatch{4}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
         matlabbatch{4}.spm.stats.con.consess{5}.tcon.name = 'incongruency hrf';
-        matlabbatch{4}.spm.stats.con.consess{5}.tcon.weights = [-1 0 0 0 0.333333333333333 0 0 0 0.333333333333333 0 0 0 0.333333333333333 0 0 0];
+        matlabbatch{4}.spm.stats.con.consess{5}.tcon.weights = ...
+            [-1 0 0 0 ...
+            0.333333333333333 0 0 0 ...
+            0.333333333333333 0 0 0 ...
+            0.333333333333333 0 0 0];
         matlabbatch{4}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
         matlabbatch{4}.spm.stats.con.consess{6}.tcon.name = 'incongruency trial variations';
-        matlabbatch{4}.spm.stats.con.consess{6}.tcon.weights = [0 0 -1 0 0 0 0.333333333333333 0 0 0 0.333333333333333 0 0 0 0.333333333333333 0];
+        matlabbatch{4}.spm.stats.con.consess{6}.tcon.weights = ...
+            [0 0 -1 0 ...
+            0 0 0.333333333333333 0 ...
+            0 0 0.333333333333333 0 ...
+            0 0 0.333333333333333 0];
         matlabbatch{4}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
         matlabbatch{4}.spm.stats.con.consess{7}.tcon.name = 'phonology-hrf';
         matlabbatch{4}.spm.stats.con.consess{7}.tcon.weights = [-1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0];
@@ -259,25 +343,47 @@ for subject = 1:size(subj,1)
         matlabbatch{4}.spm.stats.con.consess{9}.tcon.weights = [-1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0];
         matlabbatch{4}.spm.stats.con.consess{9}.tcon.sessrep = 'none';
         matlabbatch{4}.spm.stats.con.delete = 0;
-        stat_batch = spm_jobman('run',matlabbatch);
+        
+        try
+            stat_batch = spm_jobman('run',matlabbatch);
+        catch
+           warning('Could not calculate stats for %s', subj(subject).name);
+           cd(bids_dir);
+           continue;
+        end
+        
 
+        %% boosted stats batch
         % re-run the stats batch but on un-smoothed data and smooth the
         % boosted beta and con
 
-        matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
+        % boost stats
+        matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
+            {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
         matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'boosted_stats';
-        
-        matlabbatch{2}.spm.stats.fmri_spec.dir(1) = cfg_dep('Make Directory: Make Directory ''boosted_stats''', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','dir'));
-        for f=1:size(preprocess{11}.files,1)
-            matlabbatch{2}.spm.stats.fmri_spec.sess.scans(f,:) = preprocess{10}.files(f);
+
+        matlabbatch{2}.spm.stats.fmri_spec.dir(1) = ...
+            cfg_dep('Make Directory: Make Directory ''boosted_stats''', ...
+            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','dir'));
+
+        for f=1:size(preprocess{12}.files,1)
+            matlabbatch{2}.spm.stats.fmri_spec.sess.scans(f,:) = preprocess{12}.files(f);
         end
-        
-        stat_batch = spm_jobman('run',matlabbatch);
-        boosted_files = spmup_hrf_boost([bids_dir filesep 'derivatives' filesep subj(subject).name filesep 'boosted_stats' filesep 'SPM.mat']);
+
+        try
+            boost_batch = spm_jobman('run',matlabbatch);
+        catch
+           warning('Could not boost stats for %s', subj(subject).name);
+           cd(bids_dir);
+           continue;
+        end
+
+        boosted_files = spmup_hrf_boost([bids_dir filesep 'derivatives' ...
+            filesep subj(subject).name filesep 'boosted_stats' filesep 'SPM.mat']);
         spmup_smooth_boostedfiles(boosted_files{1},[8 8 8]); % smooth boosted beta files
         spmup_smooth_boostedfiles(boosted_files{2},[8 8 8]); % smooth boosted con files
-        clear matlabbatch; 
-        cd(bids_dir)
-        
+        clear matlabbatch;
+        cd(bids_dir);
     end
 end
