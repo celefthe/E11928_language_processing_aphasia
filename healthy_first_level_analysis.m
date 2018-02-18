@@ -199,8 +199,6 @@ for subject = 1:size(subj,1)
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.interp = 4;
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.wrap = [0 0 0];
         matlabbatch{10}.spm.tools.oldnorm.estwrite.roptions.prefix = 'oldnorm_';
-        
-
     
         matlabbatch{11}.spm.spatial.smooth.data(1) = ...
             cfg_dep('Old Normalise: Estimate & Write: Normalised Images (Subj 1)', ...
@@ -223,9 +221,10 @@ for subject = 1:size(subj,1)
         
         try
             preprocess = spm_jobman('run',matlabbatch);
-        catch
-           warning('Could not calculate preprocess %s', subj(subject).name);
+        catch exc
+           warning('Could not preprocess %s - %s', subj(subject).name, exc.message);
            cd(bids_dir);
+           clear matlabbatch;
            continue;
         end
         
@@ -346,9 +345,10 @@ for subject = 1:size(subj,1)
         
         try
             stat_batch = spm_jobman('run',matlabbatch);
-        catch
-           warning('Could not calculate stats for %s', subj(subject).name);
+        catch exc
+           warning('Could not calculate stats for %s - %s', subj(subject).name, exc.message);
            cd(bids_dir);
+           clear matlabbatch;
            continue;
         end
         
@@ -373,9 +373,10 @@ for subject = 1:size(subj,1)
 
         try
             boost_batch = spm_jobman('run',matlabbatch);
-        catch
-           warning('Could not boost stats for %s', subj(subject).name);
+        catch exc
+           warning('Could not boost stats for %s - %s', subj(subject).name, exc.message);
            cd(bids_dir);
+           clear matlabbatch;
            continue;
         end
 
