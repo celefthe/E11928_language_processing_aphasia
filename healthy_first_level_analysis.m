@@ -270,13 +270,15 @@ for subject = 1:size(subj,1)
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).orth = 1;
         end
         
-        if isfield(fmri_events,'Error_onset')
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).name = 'Error';
-            charn = size(fmri_events.Error_onset); % because of 'nil' sees entries as chars
+         if isfield(fmri_events,'Error_onset')
+            charn = size(fmri_events.Error_onset); % because of 'nil' sees entries as chars            
             errors = sum(fmri_events.Error_onset == ['nil' repmat(' ',[1 charn(2)-3])],2) ~= charn(2);
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).onset = str2num(fmri_events.Error_onset(errors,:));
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).duration = str2num(fmri_events.Error_duration(errors,:));
-            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).tmod = 0;
+            if sum(errors)~=0
+                matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).name = 'Errors';
+                matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).onset = str2num(fmri_events.Error_onset(errors,:));
+                matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).duration = str2num(fmri_events.Error_duration(errors,:));
+                matlabbatch{2}.spm.stats.fmri_spec.sess.cond(5).tmod = 0;
+            end
         end
 
         matlabbatch{2}.spm.stats.fmri_spec.sess.multi = {''};
