@@ -112,13 +112,13 @@ matlabbatch{5}.spm.stats.con.spmmat(1) = ...
     substruct('.','val', '{}',{4}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','spmmat'));
 matlabbatch{5}.spm.stats.con.consess{1}.tcon.name = 'phonology';
-matlabbatch{5}.spm.stats.con.consess{1}.tcon.weights = [1 0 0];
+matlabbatch{5}.spm.stats.con.consess{1}.tcon.weights = [0 1 0 0];
 matlabbatch{5}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{5}.spm.stats.con.consess{2}.tcon.name = 'semantic';
-matlabbatch{5}.spm.stats.con.consess{2}.tcon.weights = [0 1 0];
+matlabbatch{5}.spm.stats.con.consess{2}.tcon.weights = [0 0 1 0];
 matlabbatch{5}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
 matlabbatch{5}.spm.stats.con.consess{3}.tcon.name = 'unrelated';
-matlabbatch{5}.spm.stats.con.consess{3}.tcon.weights = [0 0 1];
+matlabbatch{5}.spm.stats.con.consess{3}.tcon.weights = [0 0 0 1];
 matlabbatch{5}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
 matlabbatch{5}.spm.stats.con.delete = 0;
 
