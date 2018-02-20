@@ -92,8 +92,7 @@ matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).c = unr_dprimes;
 matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).cname = 'unrelated';
 matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).iCC = 1;
 
-% no group intersect
-matlabbatch{3}.spm.stats.factorial_design.des.mreg.incint = 0;
+matlabbatch{3}.spm.stats.factorial_design.des.mreg.incint = 1;
 
 matlabbatch{3}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
 matlabbatch{3}.spm.stats.factorial_design.masking.tm.tm_none = 1;
