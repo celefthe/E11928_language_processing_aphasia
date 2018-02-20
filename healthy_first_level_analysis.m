@@ -384,8 +384,8 @@ for subject = 1:size(subj,1)
 
         boosted_files = spmup_hrf_boost([bids_dir filesep 'derivatives' ...
             filesep subj(subject).name filesep 'boosted_stats' filesep 'SPM.mat']);
-        spmup_smooth_boostedfiles(boosted_files{1},[8 8 8]); % smooth boosted beta files
-        spmup_smooth_boostedfiles(boosted_files{2},[8 8 8]); % smooth boosted con files
+        spmup_smooth_boostedfiles(boosted_files{1},[5 5 5]); % smooth boosted beta files
+        spmup_smooth_boostedfiles(boosted_files{2},[5 5 5]); % smooth boosted con files
         clear matlabbatch;
         cd(bids_dir);
     end
