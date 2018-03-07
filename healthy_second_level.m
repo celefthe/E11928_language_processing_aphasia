@@ -93,7 +93,7 @@ matlabbatch{6}.spm.stats.factorial_design.dir = ...
 matlabbatch{6}.spm.stats.factorial_design.des.t1.scans = {};
 for idx = 1:size(subj,1)
     matlabbatch{6}.spm.stats.factorial_design.des.t1.scans(end+1,:) = {
-        [subjects{idx} filesep 'stats/con_0002.nii,1']
+        [subjects{idx} filesep 'stats/con_0001.nii,1']
     };
 end
 matlabbatch{6}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
@@ -127,7 +127,7 @@ matlabbatch{9}.spm.stats.factorial_design.dir = ...
 matlabbatch{9}.spm.stats.factorial_design.des.t1.scans = {};
 for idx = 1:size(subj,1)
     matlabbatch{9}.spm.stats.factorial_design.des.t1.scans(end+1,:) = {
-        [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0002.nii,1']
+        [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0001.nii,1']
     };
 end
 matlabbatch{9}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
@@ -164,8 +164,8 @@ matlabbatch{2}.spm.stats.factorial_design.dir(1) = ...
 matlabbatch{2}.spm.stats.factorial_design.des.pt.pair(idx).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.pt.pair(idx).scans = {
-        [subjects{idx} filesep 'stats/con_0002.nii,1'],
-        [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0002.nii,1']
+        [subjects{idx} filesep 'stats/con_0001.nii,1'],
+        [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0001.nii,1']
      };
 end
 matlabbatch{2}.spm.stats.factorial_design.des.pt.gmsca = 0;
@@ -202,13 +202,14 @@ matlabbatch{4}.spm.stats.con.delete = 1;
 boost_qa_batch = spm_jobman('run',matlabbatch);
 clear matlabbatch;
 
+
 %% Canonical HRF vs time derivative QA
 
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = task_hrf_batch{3}.dir;
-matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'hrf_vs_temporal';
+matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'hrf_deriv';
 
 matlabbatch{2}.spm.stats.factorial_design.dir(1) = ...
-    cfg_dep('Make Directory: Make Directory ''hrf_vs_temporal''', ...
+    cfg_dep('Make Directory: Make Directory ''hrf_deriv''', ...
     substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','dir'));
 matlabbatch{2}.spm.stats.factorial_design.des.fd.fact(1).name = 'conditions';
@@ -333,6 +334,9 @@ matlabbatch{4}.spm.stats.con.delete = 0;
 
 deriv_qa_batch = spm_jobman('run',matlabbatch);
 clear matlabbatch; 
+
+%TODO overlap deriv_qa and boost_qa
+
 
 %TODO plot regions
 
