@@ -203,7 +203,7 @@ boost_qa_batch = spm_jobman('run',matlabbatch);
 clear matlabbatch;
 
 
-%% Canonical HRF vs time derivative QA
+%% Canonical HRF vs time derivative ANOVA QA
 
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = task_hrf_batch{3}.dir;
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'hrf_deriv';
@@ -329,14 +329,47 @@ matlabbatch{4}.spm.stats.con.consess{2}.fcon.name = 'time deriv';
 A = eye(8); A([1 3 5 7],[1 3 5 7])=0;
 matlabbatch{4}.spm.stats.con.consess{2}.fcon.weights = A;
 matlabbatch{4}.spm.stats.con.consess{2}.fcon.sessrep = 'none';
-matlabbatch{4}.spm.stats.con.delete = 0;
+matlabbatch{4}.spm.stats.con.delete = 1;
 
+matlabbatch{5}.spm.stats.results.spmmat = ...
+    cfg_dep('Contrast Manager: SPM.mat File', ...
+    substruct('.','val', '{}',{4}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{5}.spm.stats.results.conspec.titlestr = '';
+matlabbatch{5}.spm.stats.results.conspec.contrasts = 1;
+matlabbatch{5}.spm.stats.results.conspec.threshdesc = 'none';
+matlabbatch{5}.spm.stats.results.conspec.thresh = 0.001;
+matlabbatch{5}.spm.stats.results.conspec.extent = 0;
+matlabbatch{5}.spm.stats.results.conspec.conjunction = 1;
+matlabbatch{5}.spm.stats.results.conspec.mask.contrast.contrasts = 2;
+matlabbatch{5}.spm.stats.results.conspec.mask.contrast.thresh = 0.05;
+matlabbatch{5}.spm.stats.results.conspec.mask.contrast.mtype = 0;
+matlabbatch{5}.spm.stats.results.units = 1;
+matlabbatch{5}.spm.stats.results.export{1}.ps = true;
+matlabbatch{5}.spm.stats.results.export{2}.tspm.basename = 'overlay';
 
 deriv_qa_batch = spm_jobman('run',matlabbatch);
 clear matlabbatch; 
 
-%TODO overlap deriv_qa and boost_qa
 
+%% Overlay deriv_qa and boost_qa
+
+matlabbatch{1}.spm.stats.results.spmmat = boost_qa_batch{4}.spmmat;  % boost_qa stats
+matlabbatch{1}.spm.stats.results.conspec.titlestr = '';
+matlabbatch{1}.spm.stats.results.conspec.contrasts = 1;  % first contrast is hrf vs hrf_boost
+matlabbatch{1}.spm.stats.results.conspec.threshdesc = 'none';
+matlabbatch{1}.spm.stats.results.conspec.thresh = 0.05;
+matlabbatch{1}.spm.stats.results.conspec.extent = 0;
+matlabbatch{1}.spm.stats.results.conspec.conjunction = 1;
+matlabbatch{1}.spm.stats.results.conspec.mask.image.name = deriv_qa_batch{5}.filtered;  % deriv_qa overlay between
+                                                                                        % canonical hrf and time deriv
+matlabbatch{1}.spm.stats.results.conspec.mask.image.mtype = 0;
+matlabbatch{1}.spm.stats.results.units = 1;
+matlabbatch{1}.spm.stats.results.export{1}.ps = true;
+matlabbatch{1}.spm.stats.results.export{2}.tspm.basename = 'deriv_vs_boost';  % boost_qa/spmT_0001_deriv_vs_boost.nii
+
+deriv_vs_boost_batch = spm_jobman('run',matlabbatch);
+clear matlabbatch; 
 
 %TODO plot regions
 
@@ -359,7 +392,7 @@ ddm_threshold = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 
 ddm_bias = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_bias.csv']);
 ddm_nondec = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_nondec.csv']);
 
-%TODO - refactor from earlier in file
+%TODO - refactor to go earlier in file
 subjects = {};
 for idx = 1:size(subj,1)
      subjects{idx}.path = [bids_dir filesep 'derivatives' filesep subj(idx).name];
