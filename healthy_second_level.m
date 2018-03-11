@@ -198,6 +198,18 @@ matlabbatch{4}.spm.stats.con.consess{1}.tcon.weights = [-1 1 zeros(1, size(subj,
 matlabbatch{4}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{4}.spm.stats.con.delete = 1;
 
+matlabbatch{5}.spm.stats.results.spmmat = ...
+    cfg_dep('Contrast Manager: SPM.mat File', ...
+    substruct('.','val', '{}',{4}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{5}.spm.stats.results.conspec.titlestr = '';
+matlabbatch{5}.spm.stats.results.conspec.contrasts = 1;  % first contrast is hrf vs hrf_boost
+matlabbatch{5}.spm.stats.results.conspec.threshdesc = 'none';
+matlabbatch{5}.spm.stats.results.conspec.thresh = 0.05;
+matlabbatch{5}.spm.stats.results.conspec.extent = 0;
+matlabbatch{5}.spm.stats.results.conspec.conjunction = 1;
+matlabbatch{5}.spm.stats.results.export{1}.binary.basename = 'binary';
+
 % run batch
 boost_qa_batch = spm_jobman('run',matlabbatch);
 clear matlabbatch;
@@ -338,7 +350,7 @@ matlabbatch{5}.spm.stats.results.spmmat = ...
 matlabbatch{5}.spm.stats.results.conspec.titlestr = '';
 matlabbatch{5}.spm.stats.results.conspec.contrasts = 1;
 matlabbatch{5}.spm.stats.results.conspec.threshdesc = 'none';
-matlabbatch{5}.spm.stats.results.conspec.thresh = 0.001;
+matlabbatch{5}.spm.stats.results.conspec.thresh = 0.05;
 matlabbatch{5}.spm.stats.results.conspec.extent = 0;
 matlabbatch{5}.spm.stats.results.conspec.conjunction = 1;
 matlabbatch{5}.spm.stats.results.conspec.mask.contrast.contrasts = 2;
@@ -347,30 +359,31 @@ matlabbatch{5}.spm.stats.results.conspec.mask.contrast.mtype = 0;
 matlabbatch{5}.spm.stats.results.units = 1;
 matlabbatch{5}.spm.stats.results.export{1}.ps = true;
 matlabbatch{5}.spm.stats.results.export{2}.tspm.basename = 'overlay';
+matlabbatch{5}.spm.stats.results.export{3}.binary.basename = 'binary';
 
 deriv_qa_batch = spm_jobman('run',matlabbatch);
 clear matlabbatch; 
 
 
-%% Overlay deriv_qa and boost_qa
+%% Compute overlap between deriv_qa and boost_qa
 
-matlabbatch{1}.spm.stats.results.spmmat = boost_qa_batch{4}.spmmat;  % boost_qa stats
-matlabbatch{1}.spm.stats.results.conspec.titlestr = '';
-matlabbatch{1}.spm.stats.results.conspec.contrasts = 1;  % first contrast is hrf vs hrf_boost
-matlabbatch{1}.spm.stats.results.conspec.threshdesc = 'none';
-matlabbatch{1}.spm.stats.results.conspec.thresh = 0.05;
-matlabbatch{1}.spm.stats.results.conspec.extent = 0;
-matlabbatch{1}.spm.stats.results.conspec.conjunction = 1;
-matlabbatch{1}.spm.stats.results.conspec.mask.image.name = deriv_qa_batch{5}.filtered;  % deriv_qa overlay between
-                                                                                        % canonical hrf and time deriv
-matlabbatch{1}.spm.stats.results.conspec.mask.image.mtype = 0;
-matlabbatch{1}.spm.stats.results.units = 1;
-matlabbatch{1}.spm.stats.results.export{1}.ps = true;
-matlabbatch{1}.spm.stats.results.export{2}.tspm.basename = 'deriv_vs_boost';  % boost_qa/spmT_0001_deriv_vs_boost.nii
+deriv_qa_vol_headers = spm_vol(deriv_qa_batch{5}.filtered{1});
+deriv_qa_vol_data = spm_read_vols(deriv_qa_vol_headers);
 
-deriv_vs_boost_batch = spm_jobman('run',matlabbatch);
-clear matlabbatch; 
+boost_qa_vol_headers = spm_vol(boost_qa_batch{5}.filtered{1});
+boost_qa_vol_data = spm_read_vols(boost_qa_vol_headers);
 
+overlap = sum(boost_qa_vol_data(:)>0 & deriv_qa_vol_data(:)>0) / ...
+        (length((boost_qa_vol_data(:)>0)) + length((deriv_qa_vol_data(:)>0)));
+fprintf('\nderiv_qa/boost_qa overlap: %3.4f %%\n\n', overlap * 100);
+
+fileid = fopen([task_hrf_batch{3}.dir{1} filesep 'deriv-boost_overlap'],'w');
+fprintf(fileid,'%3.4f %%\n', overlap * 100);
+fclose(fileid);
+%deriv_vs_boost_batch = spm_jobman('run',matlabbatch);
+%clear matlabbatch; 
+
+return
 %TODO plot regions
 
 
@@ -419,9 +432,6 @@ for idx = 1:size(subj,1)
      subjects{idx}.bias = ddm_bias.bias(idx);
      subjects{idx}.nondec = ddm_nondec.non_decision(idx);
 end
-
-
-%% regressor batch
 
 % set up directory tree
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
@@ -771,7 +781,7 @@ matlabbatch{13}.spm.stats.con.consess{9}.tcon.sessrep = 'none';
 matlabbatch{13}.spm.stats.con.delete = 1;
 
 
-%% run batch
+% run batch
 regressor_batch = spm_jobman('run',matlabbatch);
 
 % return to code dir
