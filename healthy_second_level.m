@@ -31,7 +31,11 @@ bids_dir = pwd;
 subj = dir('sub-healthy*');
 subjects = {};
 for idx = 1:size(subj,1)
-     subjects{idx} = [bids_dir filesep 'derivatives' filesep subj(idx).name];
+     subjects{idx}.path = [bids_dir filesep 'derivatives' filesep subj(idx).name];
+     subjects{idx}.beta.ss = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0001.nii,1'];
+     subjects{idx}.beta.cp = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0005.nii,1'];
+     subjects{idx}.beta.cs = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0009.nii,1'];
+     subjects{idx}.beta.us = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0013.nii,1'];
 end
 
 % set up dir structure for group-level analyses
@@ -93,7 +97,7 @@ matlabbatch{6}.spm.stats.factorial_design.dir = ...
 matlabbatch{6}.spm.stats.factorial_design.des.t1.scans = {};
 for idx = 1:size(subj,1)
     matlabbatch{6}.spm.stats.factorial_design.des.t1.scans(end+1,:) = {
-        [subjects{idx} filesep 'stats/con_0001.nii,1']
+        [subjects{idx}.path filesep 'stats/con_0001.nii,1']
     };
 end
 matlabbatch{6}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
@@ -127,7 +131,7 @@ matlabbatch{9}.spm.stats.factorial_design.dir = ...
 matlabbatch{9}.spm.stats.factorial_design.des.t1.scans = {};
 for idx = 1:size(subj,1)
     matlabbatch{9}.spm.stats.factorial_design.des.t1.scans(end+1,:) = {
-        [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0001.nii,1']
+        [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0001.nii,1']
     };
 end
 matlabbatch{9}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
@@ -164,8 +168,8 @@ matlabbatch{2}.spm.stats.factorial_design.dir(1) = ...
 matlabbatch{2}.spm.stats.factorial_design.des.pt.pair(idx).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.pt.pair(idx).scans = {
-        [subjects{idx} filesep 'stats/con_0001.nii,1'],
-        [subjects{idx} filesep 'boosted_stats/hrf_boost/sboost_con_0001.nii,1']
+        [subjects{idx}.path filesep 'stats/con_0001.nii,1'],
+        [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0001.nii,1']
      };
 end
 matlabbatch{2}.spm.stats.factorial_design.des.pt.gmsca = 0;
@@ -243,7 +247,7 @@ matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(1).levels = [1
 matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(1).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(1).scans(end+1,:) = ...
-         {[subjects{idx} filesep 'stats/beta_0001.nii,1']};
+         {[subjects{idx}.path filesep 'stats/beta_0001.nii,1']};
 end
 
 % cp hrf
@@ -252,7 +256,7 @@ matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(2).levels = [2
 matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(2).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(2).scans(end+1,:) = ...
-         {[subjects{idx} filesep 'stats/beta_0005.nii,1']};
+         {[subjects{idx}.path filesep 'stats/beta_0005.nii,1']};
 end
 
 % cs hrf§
@@ -261,7 +265,7 @@ matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(3).levels = [3
 matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(3).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(3).scans(end+1,:) = ...
-         {[subjects{idx} filesep 'stats/beta_0009.nii,1']};
+         {[subjects{idx}.path filesep 'stats/beta_0009.nii,1']};
 end
 
 % us hrf
@@ -270,7 +274,7 @@ matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(4).levels = [4
 matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(4).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(4).scans(end+1,:) = ...
-         {[subjects{idx} filesep 'stats/beta_0013.nii,1']};
+         {[subjects{idx}.path filesep 'stats/beta_0013.nii,1']};
 end
 
 % ss time deriv
@@ -279,7 +283,7 @@ matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(5).levels = [1
 matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(5).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(5).scans(end+1,:) = ...
-         {[subjects{idx} filesep 'stats/beta_0002.nii,1']};
+         {[subjects{idx}.path filesep 'stats/beta_0002.nii,1']};
 end
 
 % cp time deriv
@@ -288,7 +292,7 @@ matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(6).levels = [2
 matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(6).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(6).scans(end+1,:) = ...
-         {[subjects{idx} filesep 'stats/beta_0006.nii,1']};
+         {[subjects{idx}.path filesep 'stats/beta_0006.nii,1']};
 end
 
 % cs time deriv
@@ -297,7 +301,7 @@ matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(7).levels = [3
 matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(7).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(7).scans(end+1,:) = ...
-         {[subjects{idx} filesep 'stats/beta_0010.nii,1']};
+         {[subjects{idx}.path filesep 'stats/beta_0010.nii,1']};
 end
 
 % us time deriv
@@ -306,7 +310,7 @@ matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(8).levels = [4
 matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(8).scans = {};
 for idx = 1:size(subj, 1)
      matlabbatch{2}.spm.stats.factorial_design.des.fd.icell(8).scans(end+1,:) = ...
-         {[subjects{idx} filesep 'stats/beta_0012.nii,1']};
+         {[subjects{idx}.path filesep 'stats/beta_0012.nii,1']};
 end
 
 matlabbatch{2}.spm.stats.factorial_design.des.fd.contrasts = 1;
@@ -388,8 +392,41 @@ fclose(fileid);
 %% Part 2: Model Incongruency Effects %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%TODO Use repeated-measures ANOVA instead of one-sample t-tests
+matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = task_hrf_batch{2}.dir;
+matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence_effect';
 
+matlabbatch{2}.spm.stats.factorial_design.dir = ...
+    cfg_dep('Make Directory: Make Directory ''incongruence_effect''', ...
+    substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+
+for idx = 1:size(subj,1)
+    matlabbatch{2}.spm.stats.factorial_design.des.anovaw.fsubject(idx).scans = ...
+        {[subjects{idx}.beta.ss]; [subjects{idx}.beta.cp]; [subjects{idx}.beta.cs]; [subjects{idx}.beta.us]};
+    matlabbatch{2}.spm.stats.factorial_design.des.anovaw.fsubject(idx).conds = [1 2 3 4]; % SS, CP, CS, US
+end
+matlabbatch{2}.spm.stats.factorial_design.des.anovaw.dept = 1;
+matlabbatch{2}.spm.stats.factorial_design.des.anovaw.variance = 1;
+matlabbatch{2}.spm.stats.factorial_design.des.anovaw.gmsca = 0;
+matlabbatch{2}.spm.stats.factorial_design.des.anovaw.ancova = 0;
+matlabbatch{2}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{2}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{2}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{2}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{2}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{2}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{2}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{2}.spm.stats.factorial_design.globalm.glonorm = 1;
+
+matlabbatch{3}.spm.stats.fmri_est.spmmat(1) = ...
+    cfg_dep('Factorial design specification: SPM.mat File', ...
+    substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{3}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{3}.spm.stats.fmri_est.method.Classical = 1;
+
+incongruence_batch = spm_jobman('run', matlabbatch);
+clear matlabbatch;
 
 return
 
