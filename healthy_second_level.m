@@ -380,10 +380,7 @@ fprintf('\nderiv_qa/boost_qa overlap: %3.4f %%\n\n', overlap * 100);
 fileid = fopen([task_hrf_batch{3}.dir{1} filesep 'deriv-boost_overlap.txt'],'w');
 fprintf(fileid,'%3.4f %%\n', overlap * 100);
 fclose(fileid);
-%deriv_vs_boost_batch = spm_jobman('run',matlabbatch);
-%clear matlabbatch; 
 
-return
 %TODO plot regions
 
 
@@ -393,6 +390,8 @@ return
 
 %TODO Use repeated-measures ANOVA instead of one-sample t-tests
 
+
+return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Part 3: Regressions                %%
