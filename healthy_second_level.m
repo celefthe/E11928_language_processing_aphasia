@@ -32,10 +32,34 @@ subj = dir('sub-healthy*');
 subjects = {};
 for idx = 1:size(subj,1)
      subjects{idx}.path = [bids_dir filesep 'derivatives' filesep subj(idx).name];
+
      subjects{idx}.beta.ss = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0001.nii,1'];
      subjects{idx}.beta.cp = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0005.nii,1'];
      subjects{idx}.beta.cs = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0009.nii,1'];
      subjects{idx}.beta.us = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0013.nii,1'];
+
+     subjects{idx}.con.phonology = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0007.nii,1'];
+     subjects{idx}.con.semantic = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0008.nii,1'];
+     subjects{idx}.con.unrelated = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0009.nii,1'];
+     
+     subjects{idx}.dprime.phonology = dprimes.SS_CP(idx);
+     subjects{idx}.dprime.semantic = dprimes.SS_CS(idx);
+     subjects{idx}.dprime.unrelated = dprimes.SS_US(idx);
+     
+     subjects{idx}.beta.ss = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0001.nii,1'];
+     subjects{idx}.beta.cp = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0005.nii,1'];
+     subjects{idx}.beta.cs = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0009.nii,1'];
+     subjects{idx}.beta.us = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0013.nii,1'];
+     
+     subjects{idx}.subj_idx = drift_rates.subj_idx(idx);
+     subjects{idx}.drift.ss = drift_rates.SS(idx);
+     subjects{idx}.drift.cp = drift_rates.CP(idx);
+     subjects{idx}.drift.cs = drift_rates.CS(idx);
+     subjects{idx}.drift.us = drift_rates.US(idx);
+     subjects{idx}.threshold = ddm_threshold.threshold(idx);
+     subjects{idx}.bias = ddm_bias.bias(idx);
+     subjects{idx}.nondec = ddm_nondec.non_decision(idx);
+
 end
 
 % set up dir structure for group-level analyses
@@ -425,10 +449,28 @@ matlabbatch{3}.spm.stats.fmri_est.spmmat(1) = ...
 matlabbatch{3}.spm.stats.fmri_est.write_residuals = 0;
 matlabbatch{3}.spm.stats.fmri_est.method.Classical = 1;
 
+%TODO double-check contrasts
+matlabbatch{4}.spm.stats.con.spmmat(1) = ...
+    cfg_dep('Model estimation: SPM.mat File', ...
+    substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{4}.spm.stats.con.consess{1}.tcon.name = 'ss_all';
+matlabbatch{4}.spm.stats.con.consess{1}.tcon.weights = [1 -1/3 -1/3 -1/3];
+matlabbatch{4}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{2}.tcon.name = 'ss_cp';
+matlabbatch{4}.spm.stats.con.consess{2}.tcon.weights = [1 -1 0 0];
+matlabbatch{4}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{3}.tcon.name = 'ss_cs';
+matlabbatch{4}.spm.stats.con.consess{3}.tcon.weights = [1 0 -1 0];
+matlabbatch{4}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{4}.tcon.name = 'ss_us';
+matlabbatch{4}.spm.stats.con.consess{4}.tcon.weights = [1 0 0 -1];
+matlabbatch{4}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.delete = 0;
+
 incongruence_batch = spm_jobman('run', matlabbatch);
 clear matlabbatch;
 
-return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Part 3: Regressions                %%
@@ -440,34 +482,6 @@ drift_rates = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'h
 ddm_threshold = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_threshold.csv']);
 ddm_bias = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_bias.csv']);
 ddm_nondec = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_nondec.csv']);
-
-%TODO - refactor to go earlier in file
-subjects = {};
-for idx = 1:size(subj,1)
-     subjects{idx}.path = [bids_dir filesep 'derivatives' filesep subj(idx).name];
-     
-     subjects{idx}.con.phonology = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0007.nii,1'];
-     subjects{idx}.con.semantic = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0008.nii,1'];
-     subjects{idx}.con.unrelated = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0009.nii,1'];
-     
-     subjects{idx}.dprime.phonology = dprimes.SS_CP(idx);
-     subjects{idx}.dprime.semantic = dprimes.SS_CS(idx);
-     subjects{idx}.dprime.unrelated = dprimes.SS_US(idx);
-     
-     subjects{idx}.beta.ss = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0001.nii,1'];
-     subjects{idx}.beta.cp = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0005.nii,1'];
-     subjects{idx}.beta.cs = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0009.nii,1'];
-     subjects{idx}.beta.us = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0013.nii,1'];
-     
-     subjects{idx}.subj_idx = drift_rates.subj_idx(idx);
-     subjects{idx}.drift.ss = drift_rates.SS(idx);
-     subjects{idx}.drift.cp = drift_rates.CP(idx);
-     subjects{idx}.drift.cs = drift_rates.CS(idx);
-     subjects{idx}.drift.us = drift_rates.US(idx);
-     subjects{idx}.threshold = ddm_threshold.threshold(idx);
-     subjects{idx}.bias = ddm_bias.bias(idx);
-     subjects{idx}.nondec = ddm_nondec.non_decision(idx);
-end
 
 % set up directory tree
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
