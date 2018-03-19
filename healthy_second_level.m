@@ -27,7 +27,14 @@ end
 cd ..
 bids_dir = pwd;
 
-% get healthy subject derivative directory paths
+% get d' and ddm parameters
+dprimes = readtable([bids_dir filesep 'derivatives' filesep 'd_primes' filesep 'healthy_dprimes.csv']);
+drift_rates = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_driftrates.csv']);
+ddm_threshold = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_threshold.csv']);
+ddm_bias = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_bias.csv']);
+ddm_nondec = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_nondec.csv']);
+
+% get healthy subject derivative directory paths and assign behavioural modelling params to each subject
 subj = dir('sub-healthy*');
 subjects = {};
 for idx = 1:size(subj,1)
@@ -449,11 +456,11 @@ matlabbatch{3}.spm.stats.fmri_est.spmmat(1) = ...
 matlabbatch{3}.spm.stats.fmri_est.write_residuals = 0;
 matlabbatch{3}.spm.stats.fmri_est.method.Classical = 1;
 
-%TODO double-check contrasts
 matlabbatch{4}.spm.stats.con.spmmat(1) = ...
     cfg_dep('Model estimation: SPM.mat File', ...
     substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','spmmat'));
+% t contrasts for condition / group effect
 matlabbatch{4}.spm.stats.con.consess{1}.tcon.name = 'ss_all';
 matlabbatch{4}.spm.stats.con.consess{1}.tcon.weights = [1 -1/3 -1/3 -1/3];
 matlabbatch{4}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
@@ -466,6 +473,7 @@ matlabbatch{4}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
 matlabbatch{4}.spm.stats.con.consess{4}.tcon.name = 'ss_us';
 matlabbatch{4}.spm.stats.con.consess{4}.tcon.weights = [1 0 0 -1];
 matlabbatch{4}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
+%TODO contrasts for subject effect
 matlabbatch{4}.spm.stats.con.delete = 0;
 
 incongruence_batch = spm_jobman('run', matlabbatch);
@@ -475,13 +483,6 @@ clear matlabbatch;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Part 3: Regressions                %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-dprimes = readtable([bids_dir filesep 'derivatives' filesep 'd_primes' filesep 'healthy_dprimes.csv']);
-drift_rates = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_driftrates.csv']);
-ddm_threshold = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_threshold.csv']);
-ddm_bias = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_bias.csv']);
-ddm_nondec = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_nondec.csv']);
 
 % set up directory tree
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
@@ -676,17 +677,17 @@ matlabbatch{9}.spm.stats.con.consess{6}.fcon.weights = [zeros(4,1) eye(4)];
 matlabbatch{9}.spm.stats.con.consess{6}.fcon.sessrep = 'none';
 
 
-%% regression with all DDM parameters
+%% regression with drift rate + nondec 
 
 matlabbatch{10}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent(1) = ...
     cfg_dep('Make Directory: Make Directory ''regressions''', ...
     substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','dir'));
-matlabbatch{10}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'ddm_params';
+matlabbatch{10}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'ddm_with_nondec';
 
 
 matlabbatch{11}.spm.stats.factorial_design.dir(1) = ...
-    cfg_dep('Make Directory: Make Directory ''ddm_params''', ...
+    cfg_dep('Make Directory: Make Directory ''ddm_with_nondec''', ...
     substruct('.','val', '{}',{10}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','dir'));
 matlabbatch{11}.spm.stats.factorial_design.des.mreg.scans = {};
@@ -740,34 +741,6 @@ matlabbatch{11}.spm.stats.factorial_design.cov(4).cname = 'v_{us}';
 matlabbatch{11}.spm.stats.factorial_design.cov(4).iCFI = 1;
 matlabbatch{11}.spm.stats.factorial_design.cov(4).iCC = 1;
 
-bias = [];
-for idx = 1:size(subjects,2)
-    subj_z = [
-        subjects{idx}.bias;
-        subjects{idx}.bias;
-        subjects{idx}.bias;
-        subjects{idx}.bias];
-    bias = [bias ; subj_z];
-end
-matlabbatch{11}.spm.stats.factorial_design.cov(5).c = bias;
-matlabbatch{11}.spm.stats.factorial_design.cov(5).cname = 'bias';
-matlabbatch{11}.spm.stats.factorial_design.cov(5).iCFI = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(5).iCC = 1;
-
-threshold = [];
-for idx = 1:size(subjects,2)
-    subj_a = [
-        subjects{idx}.threshold;
-        subjects{idx}.threshold;
-        subjects{idx}.threshold;
-        subjects{idx}.threshold];
-    threshold = [threshold ; subj_a];
-end
-matlabbatch{11}.spm.stats.factorial_design.cov(6).c = threshold;
-matlabbatch{11}.spm.stats.factorial_design.cov(6).cname = 'threshold';
-matlabbatch{11}.spm.stats.factorial_design.cov(6).iCFI = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(6).iCC = 1;
-
 nondec = [];
 for idx = 1:size(subjects,2)
     subj_t = [
@@ -777,10 +750,10 @@ for idx = 1:size(subjects,2)
         subjects{idx}.nondec];
     nondec = [nondec ; subj_t];
 end
-matlabbatch{11}.spm.stats.factorial_design.cov(7).c = nondec;
-matlabbatch{11}.spm.stats.factorial_design.cov(7).cname = 'nondec';
-matlabbatch{11}.spm.stats.factorial_design.cov(7).iCFI = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(7).iCC = 1;
+matlabbatch{11}.spm.stats.factorial_design.cov(5).c = nondec;
+matlabbatch{11}.spm.stats.factorial_design.cov(5).cname = 'nondec';
+matlabbatch{11}.spm.stats.factorial_design.cov(5).iCFI = 1;
+matlabbatch{11}.spm.stats.factorial_design.cov(5).iCC = 1;
 
 
 matlabbatch{11}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
@@ -801,38 +774,31 @@ matlabbatch{13}.spm.stats.con.spmmat(1) = ...
     substruct('.','val', '{}',{12}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','spmmat'));
 matlabbatch{13}.spm.stats.con.consess{1}.tcon.name = 'v_ss';
-matlabbatch{13}.spm.stats.con.consess{1}.tcon.weights = [0 1 0 0 0 0 0 0];
+matlabbatch{13}.spm.stats.con.consess{1}.tcon.weights = [0 1 0 0 0 0];
 matlabbatch{13}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 matlabbatch{13}.spm.stats.con.consess{2}.tcon.name = 'v_cp';
-matlabbatch{13}.spm.stats.con.consess{2}.tcon.weights = [0 0 1 0 0 0 0 0];
+matlabbatch{13}.spm.stats.con.consess{2}.tcon.weights = [0 0 1 0 0 0];
 matlabbatch{13}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
 matlabbatch{13}.spm.stats.con.consess{3}.tcon.name = 'v_cs';
-matlabbatch{13}.spm.stats.con.consess{3}.tcon.weights = [0 0 0 1 0 0 0 0];
+matlabbatch{13}.spm.stats.con.consess{3}.tcon.weights = [0 0 0 1 0 0];
 matlabbatch{13}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
 matlabbatch{13}.spm.stats.con.consess{4}.tcon.name = 'v_us';
-matlabbatch{13}.spm.stats.con.consess{4}.tcon.weights = [0 0 0 0 1 0 0 0];
+matlabbatch{13}.spm.stats.con.consess{4}.tcon.weights = [0 0 0 0 1 0];
 matlabbatch{13}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
 matlabbatch{13}.spm.stats.con.consess{5}.tcon.name = 'v_beta_sum';
-matlabbatch{13}.spm.stats.con.consess{5}.tcon.weights = [0 1 1 1 1 0 0 0];
+matlabbatch{13}.spm.stats.con.consess{5}.tcon.weights = [0 1 1 1 1 0];
 matlabbatch{13}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
 matlabbatch{13}.spm.stats.con.consess{6}.fcon.name = 'v_condition_activation';
 matlabbatch{13}.spm.stats.con.consess{6}.fcon.weights = [zeros(4,1) eye(4)];
 matlabbatch{13}.spm.stats.con.consess{6}.fcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{7}.tcon.name = 'bias';
-matlabbatch{13}.spm.stats.con.consess{7}.tcon.weights = [0 0 0 0 0 1 0 0];
+matlabbatch{13}.spm.stats.con.consess{7}.tcon.name = 'nondec';
+matlabbatch{13}.spm.stats.con.consess{7}.tcon.weights = [0 0 0 0 0 1];
 matlabbatch{13}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{8}.tcon.name = 'threshold';
-matlabbatch{13}.spm.stats.con.consess{8}.tcon.weights = [0 0 0 0 0 0 1 0];
-matlabbatch{13}.spm.stats.con.consess{8}.tcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{9}.tcon.name = 'nondec';
-matlabbatch{13}.spm.stats.con.consess{9}.tcon.weights = [0 0 0 0 0 0 0 1];
-matlabbatch{13}.spm.stats.con.consess{9}.tcon.sessrep = 'none';
 
 matlabbatch{13}.spm.stats.con.delete = 1;
-
 
 % run batch
 regressor_batch = spm_jobman('run',matlabbatch);
 
-% return to code dir
-cd code
+% go back to bids code dir
+cd(current)
