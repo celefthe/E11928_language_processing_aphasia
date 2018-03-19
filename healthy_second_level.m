@@ -423,6 +423,8 @@ fclose(fileid);
 %% Part 2: Model Incongruency Effects %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%TODO Revise contrasts / design
+
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = task_hrf_batch{2}.dir;
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence_effect';
 
@@ -460,20 +462,46 @@ matlabbatch{4}.spm.stats.con.spmmat(1) = ...
     cfg_dep('Model estimation: SPM.mat File', ...
     substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','spmmat'));
-% t contrasts for condition / group effect
+
+% contrast for overall incongruence
 matlabbatch{4}.spm.stats.con.consess{1}.tcon.name = 'ss_all';
-matlabbatch{4}.spm.stats.con.consess{1}.tcon.weights = [1 -1/3 -1/3 -1/3];
+matlabbatch{4}.spm.stats.con.consess{1}.tcon.weights = [1 -1/3 -1/3 -1/3 zeros(1,size(subj,1))];
 matlabbatch{4}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+
+% ss vs specific incongruence pair contrasts
 matlabbatch{4}.spm.stats.con.consess{2}.tcon.name = 'ss_cp';
-matlabbatch{4}.spm.stats.con.consess{2}.tcon.weights = [1 -1 0 0];
+matlabbatch{4}.spm.stats.con.consess{2}.tcon.weights = [1 -1 0 0 zeros(1,size(subj,1))];
 matlabbatch{4}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
 matlabbatch{4}.spm.stats.con.consess{3}.tcon.name = 'ss_cs';
-matlabbatch{4}.spm.stats.con.consess{3}.tcon.weights = [1 0 -1 0];
+matlabbatch{4}.spm.stats.con.consess{3}.tcon.weights = [1 0 -1 0 zeros(1,size(subj,1))];
 matlabbatch{4}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
 matlabbatch{4}.spm.stats.con.consess{4}.tcon.name = 'ss_us';
-matlabbatch{4}.spm.stats.con.consess{4}.tcon.weights = [1 0 0 -1];
+matlabbatch{4}.spm.stats.con.consess{4}.tcon.weights = [1 0 0 -1 zeros(1,size(subj,1))];
 matlabbatch{4}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
-%TODO contrasts for subject effect
+
+% subject effect contrast
+%matlabbatch{4}.spm.stats.con.consess{5}.tcon.name = 'subj_effect';
+%matlabbatch{4}.spm.stats.con.consess{5}.tcon.weights = [zeros(1,4) ones(1,size(subj,1))*[1/size(subj,1)]];
+%matlabbatch{4}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
+
+% subject effect regressions with conditions
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.name = 'ss_regr';
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.weights = [1 0 0 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
+
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.name = 'cp_regr';
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.weights =  [0 1 0 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
+
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.name = 'cs_regr';
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.weights = [0 0 1 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
+
+matlabbatch{4}.spm.stats.con.consess{8}.tcon.name = 'us_regr';
+matlabbatch{4}.spm.stats.con.consess{8}.tcon.weights = [0 0 0 1 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{8}.tcon.sessrep = 'none';
+
+
 matlabbatch{4}.spm.stats.con.delete = 0;
 
 incongruence_batch = spm_jobman('run', matlabbatch);
