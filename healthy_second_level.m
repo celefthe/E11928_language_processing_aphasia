@@ -501,6 +501,20 @@ matlabbatch{4}.spm.stats.con.consess{8}.tcon.name = 'us_regr';
 matlabbatch{4}.spm.stats.con.consess{8}.tcon.weights = [0 0 0 1 ones(1,size(subj,1))*[1/size(subj,1)]];
 matlabbatch{4}.spm.stats.con.consess{8}.tcon.sessrep = 'none';
 
+% regressor tests 
+%TODO is this right?
+matlabbatch{9}.spm.stats.con.consess{5}.tcon.name = 'ss_cp_regr';
+matlabbatch{9}.spm.stats.con.consess{5}.tcon.weights = [1 1 0 0 ones(1,size(subj,1))*[2/size(subj,1)]];
+matlabbatch{9}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
+
+matlabbatch{10}.spm.stats.con.consess{6}.tcon.name = 'ss_cs_regr';
+matlabbatch{10}.spm.stats.con.consess{6}.tcon.weights =  [1 0 1 0 ones(1,size(subj,1))*[2/size(subj,1)]];
+matlabbatch{10}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
+
+matlabbatch{11}.spm.stats.con.consess{7}.tcon.name = 'ss_us_regr';
+matlabbatch{11}.spm.stats.con.consess{7}.tcon.weights = [1 0 0 1 ones(1,size(subj,1))*[2/size(subj,1)]];
+matlabbatch{11}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
+
 
 matlabbatch{4}.spm.stats.con.delete = 0;
 
