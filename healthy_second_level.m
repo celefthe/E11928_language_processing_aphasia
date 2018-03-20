@@ -9,9 +9,9 @@ spmroot = fileparts(which('spm'));
 spm('Defaults','fmri');
 
 % if matlab is ran from the cmd, prevent graphics window from opening
-if ~usejava('desktop')
-    spm_get_defaults('cmdline',true);
-end
+%if ~usejava('desktop')
+%    spm_get_defaults('cmdline',true);
+%end
 
 % set memory settings to improve performance 
 spm_get_defaults('stats.maxmem', 2^31); 
@@ -416,7 +416,10 @@ fileid = fopen([task_hrf_batch{3}.dir{1} filesep 'deriv-boost_overlap.txt'],'w')
 fprintf(fileid,'%3.4f %%\n', overlap * 100);
 fclose(fileid);
 
-%TODO plot regions
+
+%% Plot ROIs showing shift in temporal derivative 
+%TODO revise this bit - is it wise to call it as is?
+gp_event_plot;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -503,17 +506,17 @@ matlabbatch{4}.spm.stats.con.consess{8}.tcon.sessrep = 'none';
 
 % regressor tests 
 %TODO is this right?
-matlabbatch{9}.spm.stats.con.consess{5}.tcon.name = 'ss_cp_regr';
-matlabbatch{9}.spm.stats.con.consess{5}.tcon.weights = [1 1 0 0 ones(1,size(subj,1))*[2/size(subj,1)]];
-matlabbatch{9}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.name = 'ss_cp_regr';
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.weights = [1 1 0 0 ones(1,size(subj,1))*[2/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
 
-matlabbatch{10}.spm.stats.con.consess{6}.tcon.name = 'ss_cs_regr';
-matlabbatch{10}.spm.stats.con.consess{6}.tcon.weights =  [1 0 1 0 ones(1,size(subj,1))*[2/size(subj,1)]];
-matlabbatch{10}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.name = 'ss_cs_regr';
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.weights =  [1 0 1 0 ones(1,size(subj,1))*[2/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
 
-matlabbatch{11}.spm.stats.con.consess{7}.tcon.name = 'ss_us_regr';
-matlabbatch{11}.spm.stats.con.consess{7}.tcon.weights = [1 0 0 1 ones(1,size(subj,1))*[2/size(subj,1)]];
-matlabbatch{11}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.name = 'ss_us_regr';
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.weights = [1 0 0 1 ones(1,size(subj,1))*[2/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
 
 
 matlabbatch{4}.spm.stats.con.delete = 0;
