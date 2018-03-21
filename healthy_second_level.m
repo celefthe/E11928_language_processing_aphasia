@@ -27,12 +27,8 @@ end
 cd ..
 bids_dir = pwd;
 
-% get d' and ddm parameters
-dprimes = readtable([bids_dir filesep 'derivatives' filesep 'd_primes' filesep 'healthy_dprimes.csv']);
-drift_rates = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_driftrates.csv']);
-ddm_threshold = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_threshold.csv']);
-ddm_bias = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_bias.csv']);
-ddm_nondec = readtable([bids_dir filesep 'derivatives' filesep 'ddm' filesep 'healthy_nondec.csv']);
+% get participants.tsv file containing behavioural parameters
+participants = readtable([bids_dir filesep 'participants.tsv'], 'FileType', 'text', 'Delimiter', '\t');
 
 % get healthy subject derivative directory paths and assign behavioural modelling params to each subject
 subj = dir('sub-healthy*');
@@ -49,23 +45,23 @@ for idx = 1:size(subj,1)
      subjects{idx}.con.semantic = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0008.nii,1'];
      subjects{idx}.con.unrelated = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0009.nii,1'];
      
-     subjects{idx}.dprime.phonology = dprimes.SS_CP(idx);
-     subjects{idx}.dprime.semantic = dprimes.SS_CS(idx);
-     subjects{idx}.dprime.unrelated = dprimes.SS_US(idx);
+     subjects{idx}.dprime.phonology = participants.dprimephono_sess_1(idx);
+     subjects{idx}.dprime.semantic = participants.dprimesem_sess_1(idx);
+     subjects{idx}.dprime.unrelated = participants.dprimeunrelated_sess_1(idx);
      
      subjects{idx}.beta.ss = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0001.nii,1'];
      subjects{idx}.beta.cp = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0005.nii,1'];
      subjects{idx}.beta.cs = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0009.nii,1'];
      subjects{idx}.beta.us = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0013.nii,1'];
      
-     subjects{idx}.subj_idx = drift_rates.subj_idx(idx);
-     subjects{idx}.drift.ss = drift_rates.SS(idx);
-     subjects{idx}.drift.cp = drift_rates.CP(idx);
-     subjects{idx}.drift.cs = drift_rates.CS(idx);
-     subjects{idx}.drift.us = drift_rates.US(idx);
-     subjects{idx}.threshold = ddm_threshold.threshold(idx);
-     subjects{idx}.bias = ddm_bias.bias(idx);
-     subjects{idx}.nondec = ddm_nondec.non_decision(idx);
+     subjects{idx}.subj_idx = participants.id(idx);
+     subjects{idx}.drift.ss = participants.drifratess_sess_1(idx);
+     subjects{idx}.drift.cp = participants.drifratecp_sess_1(idx);
+     subjects{idx}.drift.cs = participants.drifratecs_sess_1(idx);
+     subjects{idx}.drift.us = participants.drifrateus_sess_1(idx);
+     subjects{idx}.threshold = participants.ddmthreshold_sess_1(idx);
+     subjects{idx}.bias = participants.ddmbias_sess_1(idx);
+     subjects{idx}.nondec = participants.ddmnondec_sess_1(idx);
 
 end
 
