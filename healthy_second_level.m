@@ -120,7 +120,7 @@ matlabbatch{5}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'hrf';
 matlabbatch{6}.spm.stats.factorial_design.dir = ...
     cfg_dep('Make Directory: Make Directory ''hrf''', ...
     substruct('.','val', '{}',{5}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-    substruct('.','dir'));;
+    substruct('.','dir'));
 matlabbatch{6}.spm.stats.factorial_design.des.t1.scans = {};
 for idx = 1:size(subj,1)
     matlabbatch{6}.spm.stats.factorial_design.des.t1.scans(end+1,:) = {
@@ -422,8 +422,6 @@ gp_event_plot;
 %% Part 2: Model Incongruency Effects %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%TODO Revise contrasts / design
-
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = task_hrf_batch{2}.dir;
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence_effect';
 
@@ -463,20 +461,34 @@ matlabbatch{4}.spm.stats.con.spmmat(1) = ...
     substruct('.','spmmat'));
 
 % contrast for overall incongruence
-matlabbatch{4}.spm.stats.con.consess{1}.tcon.name = 'ss_all';
+matlabbatch{4}.spm.stats.con.consess{1}.tcon.name = 'ss_all-';
 matlabbatch{4}.spm.stats.con.consess{1}.tcon.weights = [1 -1/3 -1/3 -1/3 zeros(1,size(subj,1))];
 matlabbatch{4}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
 
-% ss vs specific incongruence pair contrasts
-matlabbatch{4}.spm.stats.con.consess{2}.tcon.name = 'ss_cp';
-matlabbatch{4}.spm.stats.con.consess{2}.tcon.weights = [1 -1 0 0 zeros(1,size(subj,1))];
+matlabbatch{4}.spm.stats.con.consess{2}.tcon.name = 'ss_all+';
+matlabbatch{4}.spm.stats.con.consess{2}.tcon.weights = [-1 1/3 1/3 1/3 zeros(1,size(subj,1))];
 matlabbatch{4}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
-matlabbatch{4}.spm.stats.con.consess{3}.tcon.name = 'ss_cs';
-matlabbatch{4}.spm.stats.con.consess{3}.tcon.weights = [1 0 -1 0 zeros(1,size(subj,1))];
+
+% ss vs specific incongruence pair contrasts
+matlabbatch{4}.spm.stats.con.consess{3}.tcon.name = 'ss_cp-';
+matlabbatch{4}.spm.stats.con.consess{3}.tcon.weights = [1 -1 0 0 zeros(1,size(subj,1))];
 matlabbatch{4}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
-matlabbatch{4}.spm.stats.con.consess{4}.tcon.name = 'ss_us';
-matlabbatch{4}.spm.stats.con.consess{4}.tcon.weights = [1 0 0 -1 zeros(1,size(subj,1))];
+matlabbatch{4}.spm.stats.con.consess{4}.tcon.name = 'ss_cs-';
+matlabbatch{4}.spm.stats.con.consess{4}.tcon.weights = [1 0 -1 0 zeros(1,size(subj,1))];
 matlabbatch{4}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.name = 'ss_us-';
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.weights = [1 0 0 -1 zeros(1,size(subj,1))];
+matlabbatch{4}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
+
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.name = 'ss_cp+';
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.weights = [-1 1 0 0 zeros(1,size(subj,1))];
+matlabbatch{4}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.name = 'ss_cs+';
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.weights = [-1 0 1 0 zeros(1,size(subj,1))];
+matlabbatch{4}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{8}.tcon.name = 'ss_us+';
+matlabbatch{4}.spm.stats.con.consess{8}.tcon.weights = [-1 0 0 1 zeros(1,size(subj,1))];
+matlabbatch{4}.spm.stats.con.consess{8}.tcon.sessrep = 'none';
 
 % subject effect contrast
 %matlabbatch{4}.spm.stats.con.consess{5}.tcon.name = 'subj_effect';
@@ -484,36 +496,21 @@ matlabbatch{4}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
 %matlabbatch{4}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
 
 % subject effect regressions with conditions
-matlabbatch{4}.spm.stats.con.consess{5}.tcon.name = 'ss_regr';
-matlabbatch{4}.spm.stats.con.consess{5}.tcon.weights = [1 0 0 0 ones(1,size(subj,1))*[1/size(subj,1)]];
-matlabbatch{4}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{9}.tcon.name = 'ss_regr';
+matlabbatch{4}.spm.stats.con.consess{9}.tcon.weights = [1 0 0 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{9}.tcon.sessrep = 'none';
 
-matlabbatch{4}.spm.stats.con.consess{6}.tcon.name = 'cp_regr';
-matlabbatch{4}.spm.stats.con.consess{6}.tcon.weights =  [0 1 0 0 ones(1,size(subj,1))*[1/size(subj,1)]];
-matlabbatch{4}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{10}.tcon.name = 'cp_regr';
+matlabbatch{4}.spm.stats.con.consess{10}.tcon.weights =  [0 1 0 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{10}.tcon.sessrep = 'none';
 
-matlabbatch{4}.spm.stats.con.consess{7}.tcon.name = 'cs_regr';
-matlabbatch{4}.spm.stats.con.consess{7}.tcon.weights = [0 0 1 0 ones(1,size(subj,1))*[1/size(subj,1)]];
-matlabbatch{4}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
+matlabbatch{4}.spm.stats.con.consess{11}.tcon.name = 'cs_regr';
+matlabbatch{4}.spm.stats.con.consess{11}.tcon.weights = [0 0 1 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{11}.tcon.sessrep = 'none';
 
-matlabbatch{4}.spm.stats.con.consess{8}.tcon.name = 'us_regr';
-matlabbatch{4}.spm.stats.con.consess{8}.tcon.weights = [0 0 0 1 ones(1,size(subj,1))*[1/size(subj,1)]];
-matlabbatch{4}.spm.stats.con.consess{8}.tcon.sessrep = 'none';
-
-% regressor tests 
-%TODO is this right?
-matlabbatch{4}.spm.stats.con.consess{5}.tcon.name = 'ss_cp_regr';
-matlabbatch{4}.spm.stats.con.consess{5}.tcon.weights = [1 1 0 0 ones(1,size(subj,1))*[2/size(subj,1)]];
-matlabbatch{4}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
-
-matlabbatch{4}.spm.stats.con.consess{6}.tcon.name = 'ss_cs_regr';
-matlabbatch{4}.spm.stats.con.consess{6}.tcon.weights =  [1 0 1 0 ones(1,size(subj,1))*[2/size(subj,1)]];
-matlabbatch{4}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
-
-matlabbatch{4}.spm.stats.con.consess{7}.tcon.name = 'ss_us_regr';
-matlabbatch{4}.spm.stats.con.consess{7}.tcon.weights = [1 0 0 1 ones(1,size(subj,1))*[2/size(subj,1)]];
-matlabbatch{4}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
-
+matlabbatch{4}.spm.stats.con.consess{12}.tcon.name = 'us_regr';
+matlabbatch{4}.spm.stats.con.consess{12}.tcon.weights = [0 0 0 1 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{4}.spm.stats.con.consess{12}.tcon.sessrep = 'none';
 
 matlabbatch{4}.spm.stats.con.delete = 0;
 
