@@ -49,10 +49,10 @@ for idx = 1:size(subj,1)
      subjects{idx}.dprime.semantic = participants.dprimesem_sess_1(idx);
      subjects{idx}.dprime.unrelated = participants.dprimeunrelated_sess_1(idx);
      
-     subjects{idx}.beta.ss = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0001.nii,1'];
-     subjects{idx}.beta.cp = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0005.nii,1'];
-     subjects{idx}.beta.cs = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0009.nii,1'];
-     subjects{idx}.beta.us = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_beta_0013.nii,1'];
+     subjects{idx}.beta.ss_time = [subjects{idx}.path filesep 'stats/beta_0002.nii,1'];
+     subjects{idx}.beta.cp_time = [subjects{idx}.path filesep 'stats/beta_0006.nii,1'];
+     subjects{idx}.beta.cs_time = [subjects{idx}.path filesep 'stats/beta_0010.nii,1'];
+     subjects{idx}.beta.us_time = [subjects{idx}.path filesep 'stats/beta_0014.nii,1'];
      
      subjects{idx}.subj_idx = participants.id(idx);
      subjects{idx}.drift.ss = participants.drifratess_sess_1(idx);
@@ -417,6 +417,8 @@ fclose(fileid);
 %% Part 2: Model Incongruency Effects %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Incongruence effect - boosted hrf
+
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = task_hrf_batch{2}.dir;
 matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence_effect';
 
@@ -527,8 +529,121 @@ matlabbatch{4}.spm.stats.con.consess{16}.tcon.sessrep = 'none';
 
 matlabbatch{4}.spm.stats.con.delete = 0;
 
+
+%% Incongruence effect - time deriv
+matlabbatch{5}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
+    cfg_dep('Make Directory: Make Directory ''incongruence_effect''', ...
+    substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{5}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'time_deriv';
+
+matlabbatch{6}.spm.stats.factorial_design.dir = ...
+    cfg_dep('Make Directory: Make Directory ''time_deriv''', ...
+    substruct('.','val', '{}',{5}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+
+for idx = 1:size(subj,1)
+    matlabbatch{6}.spm.stats.factorial_design.des.anovaw.fsubject(idx).scans = ...
+        {[subjects{idx}.beta.ss_time]; [subjects{idx}.beta.cp_time]; 
+        [subjects{idx}.beta.cs_time]; [subjects{idx}.beta.us_time]};
+    matlabbatch{6}.spm.stats.factorial_design.des.anovaw.fsubject(idx).conds = [1 2 3 4]; % SS, CP, CS, US
+end
+matlabbatch{6}.spm.stats.factorial_design.des.anovaw.dept = 1;
+matlabbatch{6}.spm.stats.factorial_design.des.anovaw.variance = 1;
+matlabbatch{6}.spm.stats.factorial_design.des.anovaw.gmsca = 0;
+matlabbatch{6}.spm.stats.factorial_design.des.anovaw.ancova = 0;
+matlabbatch{6}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{6}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{6}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{6}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{6}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{6}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{6}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{6}.spm.stats.factorial_design.globalm.glonorm = 1;
+
+matlabbatch{7}.spm.stats.fmri_est.spmmat(1) = ...
+    cfg_dep('Factorial design specification: SPM.mat File', ...
+    substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{7}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{7}.spm.stats.fmri_est.method.Classical = 1;
+
+matlabbatch{8}.spm.stats.con.spmmat(1) = ...
+    cfg_dep('Model estimation: SPM.mat File', ...
+    substruct('.','val', '{}',{7}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+
+% contrast for overall incongruence
+matlabbatch{8}.spm.stats.con.consess{1}.tcon.name = 'ss_all-';
+matlabbatch{8}.spm.stats.con.consess{1}.tcon.weights = [1 -1/3 -1/3 -1/3 zeros(1,size(subj,1))];
+matlabbatch{8}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+
+matlabbatch{8}.spm.stats.con.consess{2}.tcon.name = 'ss_all+';
+matlabbatch{8}.spm.stats.con.consess{2}.tcon.weights = [-1 1/3 1/3 1/3 zeros(1,size(subj,1))];
+matlabbatch{8}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
+
+% ss vs specific incongruence pair contrasts
+matlabbatch{8}.spm.stats.con.consess{3}.tcon.name = 'ss_cp-';
+matlabbatch{8}.spm.stats.con.consess{3}.tcon.weights = [1 -1 0 0 zeros(1,size(subj,1))];
+matlabbatch{8}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
+matlabbatch{8}.spm.stats.con.consess{4}.tcon.name = 'ss_cs-';
+matlabbatch{8}.spm.stats.con.consess{4}.tcon.weights = [1 0 -1 0 zeros(1,size(subj,1))];
+matlabbatch{8}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
+matlabbatch{8}.spm.stats.con.consess{5}.tcon.name = 'ss_us-';
+matlabbatch{8}.spm.stats.con.consess{5}.tcon.weights = [1 0 0 -1 zeros(1,size(subj,1))];
+matlabbatch{8}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
+
+matlabbatch{8}.spm.stats.con.consess{6}.tcon.name = 'ss_cp+';
+matlabbatch{8}.spm.stats.con.consess{6}.tcon.weights = [-1 1 0 0 zeros(1,size(subj,1))];
+matlabbatch{8}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
+matlabbatch{8}.spm.stats.con.consess{7}.tcon.name = 'ss_cs+';
+matlabbatch{8}.spm.stats.con.consess{7}.tcon.weights = [-1 0 1 0 zeros(1,size(subj,1))];
+matlabbatch{8}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
+matlabbatch{8}.spm.stats.con.consess{8}.tcon.name = 'ss_us+';
+matlabbatch{8}.spm.stats.con.consess{8}.tcon.weights = [-1 0 0 1 zeros(1,size(subj,1))];
+matlabbatch{8}.spm.stats.con.consess{8}.tcon.sessrep = 'none';
+
+% subject effect regressions with conditions
+matlabbatch{8}.spm.stats.con.consess{9}.tcon.name = 'ss_regr+';
+matlabbatch{8}.spm.stats.con.consess{9}.tcon.weights = [1 0 0 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{8}.spm.stats.con.consess{9}.tcon.sessrep = 'none';
+
+matlabbatch{8}.spm.stats.con.consess{10}.tcon.name = 'cp_regr+';
+matlabbatch{8}.spm.stats.con.consess{10}.tcon.weights =  [0 1 0 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{8}.spm.stats.con.consess{10}.tcon.sessrep = 'none';
+
+matlabbatch{8}.spm.stats.con.consess{11}.tcon.name = 'cs_regr+';
+matlabbatch{8}.spm.stats.con.consess{11}.tcon.weights = [0 0 1 0 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{8}.spm.stats.con.consess{11}.tcon.sessrep = 'none';
+
+matlabbatch{8}.spm.stats.con.consess{12}.tcon.name = 'us_regr+';
+matlabbatch{8}.spm.stats.con.consess{12}.tcon.weights = [0 0 0 1 ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{8}.spm.stats.con.consess{12}.tcon.sessrep = 'none';
+
+% negative subject effect regressions with conditions
+matlabbatch{8}.spm.stats.con.consess{13}.tcon.name = 'ss_regr-';
+matlabbatch{8}.spm.stats.con.consess{13}.tcon.weights = [-1 0 0 0 -ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{8}.spm.stats.con.consess{13}.tcon.sessrep = 'none';
+
+matlabbatch{8}.spm.stats.con.consess{14}.tcon.name = 'cp_regr-';
+matlabbatch{8}.spm.stats.con.consess{14}.tcon.weights =  [0 -1 0 0 -ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{8}.spm.stats.con.consess{14}.tcon.sessrep = 'none';
+
+matlabbatch{8}.spm.stats.con.consess{15}.tcon.name = 'cs_regr-';
+matlabbatch{8}.spm.stats.con.consess{15}.tcon.weights = [0 0 -1 0 -ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{8}.spm.stats.con.consess{15}.tcon.sessrep = 'none';
+
+matlabbatch{8}.spm.stats.con.consess{16}.tcon.name = 'us_regr-';
+matlabbatch{8}.spm.stats.con.consess{16}.tcon.weights = [0 0 0 -1 -ones(1,size(subj,1))*[1/size(subj,1)]];
+matlabbatch{8}.spm.stats.con.consess{16}.tcon.sessrep = 'none';
+
+
+matlabbatch{8}.spm.stats.con.delete = 0;
+
+
 incongruence_batch = spm_jobman('run', matlabbatch);
 clear matlabbatch;
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
