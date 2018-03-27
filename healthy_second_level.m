@@ -54,6 +54,9 @@ for idx = 1:size(subj,1)
      subjects{idx}.con.phonology = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0007.nii,1'];
      subjects{idx}.con.semantic = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0008.nii,1'];
      subjects{idx}.con.unrelated = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0009.nii,1'];
+
+     subjects{idx}.con.task_hrf = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0002.nii,1'];
+     subjects{idx}.con.task_vars = [subjects{idx}.path filesep 'boosted_stats/hrf_boost/sboost_con_0003.nii,1'];
      
      subjects{idx}.dprime.phonology = participants.dprimephono_sess_1(idx);
      subjects{idx}.dprime.semantic = participants.dprimesem_sess_1(idx);
@@ -967,125 +970,122 @@ matlabbatch{14}.spm.stats.con.consess{6}.fcon.sessrep = 'none';
 
 
 
-%% regression with drift rate + nondec 
+%% Regression with non-decision time from drift diffusion model
 
-matlabbatch{10}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent(1) = ...
+% regression with task-hrf
+
+matlabbatch{15}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent(1) = ...
     cfg_dep('Make Directory: Make Directory ''regressions''', ...
     substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','dir'));
-matlabbatch{10}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'ddm_with_nondec';
+matlabbatch{15}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'nondec_boosted_hrf';
 
 
-matlabbatch{11}.spm.stats.factorial_design.dir(1) = ...
-    cfg_dep('Make Directory: Make Directory ''ddm_with_nondec''', ...
-    substruct('.','val', '{}',{10}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+matlabbatch{16}.spm.stats.factorial_design.dir(1) = ...
+    cfg_dep('Make Directory: Make Directory ''nondec_boosted_hrf''', ...
+    substruct('.','val', '{}',{15}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','dir'));
-matlabbatch{11}.spm.stats.factorial_design.des.mreg.scans = {};
+matlabbatch{16}.spm.stats.factorial_design.des.mreg.scans = {};
 for idx=1:size(subjects,2)
-    matlabbatch{11}.spm.stats.factorial_design.des.mreg.scans(end+1,:) = {subjects{idx}.beta.ss};
-    matlabbatch{11}.spm.stats.factorial_design.des.mreg.scans(end+1,:) = {subjects{idx}.beta.cp};
-    matlabbatch{11}.spm.stats.factorial_design.des.mreg.scans(end+1,:) = {subjects{idx}.beta.cs};
-    matlabbatch{11}.spm.stats.factorial_design.des.mreg.scans(end+1,:) = {subjects{idx}.beta.us};
+    matlabbatch{16}.spm.stats.factorial_design.des.mreg.scans(end+1,:) = {subjects{idx}.con.task_hrf};
 end
 
-matlabbatch{11}.spm.stats.factorial_design.des.mreg.mcov = struct('c', {}, 'cname', {}, 'iCC', {});
-
-drift_ss = [];
-for idx = 1:size(subjects,2)
-    subj_v = [subjects{idx}.drift.ss; 0; 0; 0];
-    drift_ss = [drift_ss ; subj_v];
-end
-matlabbatch{11}.spm.stats.factorial_design.des.mreg.incint = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(1).c = drift_ss;
-matlabbatch{11}.spm.stats.factorial_design.cov(1).cname = 'v_{ss}';
-matlabbatch{11}.spm.stats.factorial_design.cov(1).iCFI = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(1).iCC = 1;
-
-drift_cp = [];
-for idx = 1:size(subjects,2)
-    subj_v = [0; subjects{idx}.drift.cp; 0; 0];
-    drift_cp = [drift_cp ; subj_v];
-end
-matlabbatch{11}.spm.stats.factorial_design.cov(2).c = drift_cp;
-matlabbatch{11}.spm.stats.factorial_design.cov(2).cname = 'v_{cp}';
-matlabbatch{11}.spm.stats.factorial_design.cov(2).iCFI = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(2).iCC = 1;
-
-drift_cs = [];
-for idx = 1:size(subjects,2)
-    subj_v = [0; 0; subjects{idx}.drift.cs; 0];
-    drift_cs = [drift_cs ; subj_v];
-end
-matlabbatch{11}.spm.stats.factorial_design.cov(3).c = drift_cs;
-matlabbatch{11}.spm.stats.factorial_design.cov(3).cname = 'v_{cs}';
-matlabbatch{11}.spm.stats.factorial_design.cov(3).iCFI = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(3).iCC = 1;
-
-drift_us = [];
-for idx = 1:size(subjects,2)
-    subj_v = [0; 0; 0; subjects{idx}.drift.us];
-    drift_us = [drift_us ; subj_v];
-end
-matlabbatch{11}.spm.stats.factorial_design.cov(4).c = drift_us;
-matlabbatch{11}.spm.stats.factorial_design.cov(4).cname = 'v_{us}';
-matlabbatch{11}.spm.stats.factorial_design.cov(4).iCFI = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(4).iCC = 1;
+matlabbatch{16}.spm.stats.factorial_design.des.mreg.mcov = struct('c', {}, 'cname', {}, 'iCC', {});
 
 nondec = [];
 for idx = 1:size(subjects,2)
-    subj_t = [
-        subjects{idx}.nondec;
-        subjects{idx}.nondec;
-        subjects{idx}.nondec;
-        subjects{idx}.nondec];
+    subj_t = [subjects{idx}.nondec];
     nondec = [nondec ; subj_t];
 end
-matlabbatch{11}.spm.stats.factorial_design.cov(5).c = nondec;
-matlabbatch{11}.spm.stats.factorial_design.cov(5).cname = 'nondec';
-matlabbatch{11}.spm.stats.factorial_design.cov(5).iCFI = 1;
-matlabbatch{11}.spm.stats.factorial_design.cov(5).iCC = 1;
+matlabbatch{16}.spm.stats.factorial_design.cov(1).c = nondec;
+matlabbatch{16}.spm.stats.factorial_design.cov(1).cname = 'nondec';
+matlabbatch{16}.spm.stats.factorial_design.cov(1).iCFI = 1;
+matlabbatch{16}.spm.stats.factorial_design.cov(1).iCC = 1;
 
 
-matlabbatch{11}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
-matlabbatch{11}.spm.stats.factorial_design.masking.tm.tm_none = 1;
-matlabbatch{11}.spm.stats.factorial_design.masking.im = 1;
-matlabbatch{11}.spm.stats.factorial_design.masking.em = {''};
-matlabbatch{11}.spm.stats.factorial_design.globalc.g_omit = 1;
-matlabbatch{11}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
-matlabbatch{11}.spm.stats.factorial_design.globalm.glonorm = 1;
-matlabbatch{12}.spm.stats.fmri_est.spmmat(1) = ...
+matlabbatch{16}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{16}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{16}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{16}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{16}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{16}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{16}.spm.stats.factorial_design.globalm.glonorm = 1;
+matlabbatch{17}.spm.stats.fmri_est.spmmat(1) = ...
     cfg_dep('Factorial design specification: SPM.mat File', ...
-    substruct('.','val', '{}',{11}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','val', '{}',{16}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','spmmat'));
-matlabbatch{12}.spm.stats.fmri_est.write_residuals = 0;
-matlabbatch{12}.spm.stats.fmri_est.method.Classical = 1;
-matlabbatch{13}.spm.stats.con.spmmat(1) = ...
+matlabbatch{17}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{17}.spm.stats.fmri_est.method.Classical = 1;
+matlabbatch{18}.spm.stats.con.spmmat(1) = ...
     cfg_dep('Model estimation: SPM.mat File', ...
-    substruct('.','val', '{}',{12}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','val', '{}',{17}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
     substruct('.','spmmat'));
-matlabbatch{13}.spm.stats.con.consess{1}.tcon.name = 'v_ss';
-matlabbatch{13}.spm.stats.con.consess{1}.tcon.weights = [0 1 0 0 0 0];
-matlabbatch{13}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{2}.tcon.name = 'v_cp';
-matlabbatch{13}.spm.stats.con.consess{2}.tcon.weights = [0 0 1 0 0 0];
-matlabbatch{13}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{3}.tcon.name = 'v_cs';
-matlabbatch{13}.spm.stats.con.consess{3}.tcon.weights = [0 0 0 1 0 0];
-matlabbatch{13}.spm.stats.con.consess{3}.tcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{4}.tcon.name = 'v_us';
-matlabbatch{13}.spm.stats.con.consess{4}.tcon.weights = [0 0 0 0 1 0];
-matlabbatch{13}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{5}.tcon.name = 'v_beta_sum';
-matlabbatch{13}.spm.stats.con.consess{5}.tcon.weights = [0 1 1 1 1 0];
-matlabbatch{13}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{6}.fcon.name = 'v_condition_activation';
-matlabbatch{13}.spm.stats.con.consess{6}.fcon.weights = [zeros(4,1) eye(4)];
-matlabbatch{13}.spm.stats.con.consess{6}.fcon.sessrep = 'none';
-matlabbatch{13}.spm.stats.con.consess{7}.tcon.name = 'nondec';
-matlabbatch{13}.spm.stats.con.consess{7}.tcon.weights = [0 0 0 0 0 1];
-matlabbatch{13}.spm.stats.con.consess{7}.tcon.sessrep = 'none';
+matlabbatch{18}.spm.stats.con.consess{1}.tcon.name = 'nondec+';
+matlabbatch{18}.spm.stats.con.consess{1}.tcon.weights = [0 1];
+matlabbatch{18}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{18}.spm.stats.con.consess{2}.tcon.name = 'nondec-';
+matlabbatch{18}.spm.stats.con.consess{2}.tcon.weights = [0 -1];
+matlabbatch{18}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
 
-matlabbatch{13}.spm.stats.con.delete = 1;
+matlabbatch{18}.spm.stats.con.delete = 1;
+
+
+% regression with task trial variations / parametric regressor
+
+matlabbatch{19}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent(1) = ...
+    cfg_dep('Make Directory: Make Directory ''regressions''', ...
+    substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{19}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'nondec_paramentric_regr';
+
+
+matlabbatch{20}.spm.stats.factorial_design.dir(1) = ...
+    cfg_dep('Make Directory: Make Directory ''nondec_paramentric_regr''', ...
+    substruct('.','val', '{}',{19}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{20}.spm.stats.factorial_design.des.mreg.scans = {};
+for idx=1:size(subjects,2)
+    matlabbatch{20}.spm.stats.factorial_design.des.mreg.scans(end+1,:) = {subjects{idx}.con.task_vars};
+end
+
+matlabbatch{20}.spm.stats.factorial_design.des.mreg.mcov = struct('c', {}, 'cname', {}, 'iCC', {});
+
+nondec = [];
+for idx = 1:size(subjects,2)
+    subj_t = [subjects{idx}.nondec];
+    nondec = [nondec ; subj_t];
+end
+matlabbatch{20}.spm.stats.factorial_design.cov(1).c = nondec;
+matlabbatch{20}.spm.stats.factorial_design.cov(1).cname = 'nondec';
+matlabbatch{20}.spm.stats.factorial_design.cov(1).iCFI = 1;
+matlabbatch{20}.spm.stats.factorial_design.cov(1).iCC = 1;
+
+
+matlabbatch{20}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{20}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{20}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{20}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{20}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{20}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{20}.spm.stats.factorial_design.globalm.glonorm = 1;
+matlabbatch{21}.spm.stats.fmri_est.spmmat(1) = ...
+    cfg_dep('Factorial design specification: SPM.mat File', ...
+    substruct('.','val', '{}',{20}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{21}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{21}.spm.stats.fmri_est.method.Classical = 1;
+matlabbatch{22}.spm.stats.con.spmmat(1) = ...
+    cfg_dep('Model estimation: SPM.mat File', ...
+    substruct('.','val', '{}',{21}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{22}.spm.stats.con.consess{1}.tcon.name = 'nondec+';
+matlabbatch{22}.spm.stats.con.consess{1}.tcon.weights = [0 1];
+matlabbatch{22}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{22}.spm.stats.con.consess{2}.tcon.name = 'nondec-';
+matlabbatch{22}.spm.stats.con.consess{2}.tcon.weights = [0 -1];
+matlabbatch{22}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
+
+matlabbatch{22}.spm.stats.con.delete = 1;
 
 % run batch
 regressor_batch = spm_jobman('run',matlabbatch);
