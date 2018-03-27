@@ -260,12 +260,12 @@ for subject = 1:size(subj,1)
         for cond = 1:4
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).onset = fmri_events.Onset(fmri_events.Condition==cond);
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).duration = ...
-                mean(fmri_events.Duration(fmri_events.Condition==cond));
+                median(fmri_events.Duration(fmri_events.Condition==cond));
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).tmod = 0;
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).pmod.name = 'RT';
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).pmod.param = ...
                 fmri_events.Duration(fmri_events.Condition==cond) - ...
-                mean(fmri_events.Duration(fmri_events.Condition==cond));
+                median(fmri_events.Duration(fmri_events.Condition==cond));
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).pmod.poly = 1;
             matlabbatch{2}.spm.stats.fmri_spec.sess.cond(cond).orth = 1;
         end
