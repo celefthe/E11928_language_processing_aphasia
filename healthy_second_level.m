@@ -543,15 +543,15 @@ matlabbatch{5}.spm.stats.con.consess{16}.tcon.sessrep = 'none';
 matlabbatch{5}.spm.stats.con.consess{17}.tcon.name = 'phono+';
 matlabbatch{5}.spm.stats.con.consess{17}.tcon.weights = [1 1 -1 -1 zeros(1,size(subj,1))];
 matlabbatch{5}.spm.stats.con.consess{17}.tcon.sessrep = 'none';
-matlabbatch{5}.spm.stats.con.consess{4}.tcon.name = 'phono-';
-matlabbatch{5}.spm.stats.con.consess{4}.tcon.weights = [-1 -1 1 1 zeros(1,size(subj,1))];
-matlabbatch{5}.spm.stats.con.consess{4}.tcon.sessrep = 'none';
-matlabbatch{5}.spm.stats.con.consess{5}.tcon.name = 'semantic+';
-matlabbatch{5}.spm.stats.con.consess{5}.tcon.weights = [1 -1 1 -1 zeros(1,size(subj,1))];
-matlabbatch{5}.spm.stats.con.consess{5}.tcon.sessrep = 'none';
-matlabbatch{5}.spm.stats.con.consess{6}.tcon.name = 'semantic-';
-matlabbatch{5}.spm.stats.con.consess{6}.tcon.weights = [-1 1 -1 1 zeros(1,size(subj,1))];
-matlabbatch{5}.spm.stats.con.consess{6}.tcon.sessrep = 'none';
+matlabbatch{5}.spm.stats.con.consess{18}.tcon.name = 'phono-';
+matlabbatch{5}.spm.stats.con.consess{18}.tcon.weights = [-1 -1 1 1 zeros(1,size(subj,1))];
+matlabbatch{5}.spm.stats.con.consess{18}.tcon.sessrep = 'none';
+matlabbatch{5}.spm.stats.con.consess{19}.tcon.name = 'semantic+';
+matlabbatch{5}.spm.stats.con.consess{19}.tcon.weights = [1 -1 1 -1 zeros(1,size(subj,1))];
+matlabbatch{5}.spm.stats.con.consess{19}.tcon.sessrep = 'none';
+matlabbatch{5}.spm.stats.con.consess{20}.tcon.name = 'semantic-';
+matlabbatch{5}.spm.stats.con.consess{20}.tcon.weights = [-1 1 -1 1 zeros(1,size(subj,1))];
+matlabbatch{5}.spm.stats.con.consess{20}.tcon.sessrep = 'none';
 
 matlabbatch{5}.spm.stats.con.delete = 0;
 
@@ -664,6 +664,19 @@ matlabbatch{9}.spm.stats.con.consess{16}.tcon.name = 'us_regr-';
 matlabbatch{9}.spm.stats.con.consess{16}.tcon.weights = [0 0 0 -1 -ones(1,size(subj,1))*[1/size(subj,1)]];
 matlabbatch{9}.spm.stats.con.consess{16}.tcon.sessrep = 'none';
 
+% contrast semantic and phonological effects
+matlabbatch{9}.spm.stats.con.consess{17}.tcon.name = 'phono+';
+matlabbatch{9}.spm.stats.con.consess{17}.tcon.weights = [1 1 -1 -1 zeros(1,size(subj,1))];
+matlabbatch{9}.spm.stats.con.consess{17}.tcon.sessrep = 'none';
+matlabbatch{9}.spm.stats.con.consess{18}.tcon.name = 'phono-';
+matlabbatch{9}.spm.stats.con.consess{18}.tcon.weights = [-1 -1 1 1 zeros(1,size(subj,1))];
+matlabbatch{9}.spm.stats.con.consess{18}.tcon.sessrep = 'none';
+matlabbatch{9}.spm.stats.con.consess{19}.tcon.name = 'semantic+';
+matlabbatch{9}.spm.stats.con.consess{19}.tcon.weights = [1 -1 1 -1 zeros(1,size(subj,1))];
+matlabbatch{9}.spm.stats.con.consess{19}.tcon.sessrep = 'none';
+matlabbatch{9}.spm.stats.con.consess{20}.tcon.name = 'semantic-';
+matlabbatch{9}.spm.stats.con.consess{20}.tcon.weights = [-1 1 -1 1 zeros(1,size(subj,1))];
+matlabbatch{9}.spm.stats.con.consess{20}.tcon.sessrep = 'none';
 
 matlabbatch{9}.spm.stats.con.delete = 0;
 
