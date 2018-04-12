@@ -55,7 +55,7 @@ for s=1:N
         accuracy(:,i) = perf(index);     % performance for each condition 
         RT(:,i) = rt(index);             % reaction time for each condition
         if i>1                           % dprime relative to congruent condition
-            [~,~,dprime(s,i-1)] = rst_sdt1(sum(conditions == 1),sum(conditions == i),nansum(accuracy(:,1)),nansum(accuracy(:,i)),0);
+            [~,~,dprime(s,i-1)] = rst_sdt1(sum(conditions == 1),sum(conditions == i),nansum(accuracy(:,1)),length(index)-nansum(accuracy(:,i)),0);
         end
     end
     
@@ -77,7 +77,7 @@ subplot(2,9,[6 7 8 9]); [~] = rst_data_plot(RTs,   'estimator','median','kernel'
 
 subplot(2,9,[10:12]);   
 [dprimeM,dprimeCI] = rst_data_plot(dprime,'estimator','median','kernel','on','newfig','no'); title('d prime')
-subplot(2,9,[13:15]);   
+subplot(2,9,[13:15]);  
 [PerfM,PerfCI]     = rst_data_plot(Perf(:,[2 3 4])-repmat(Perf(:,1),[1 3]),'estimator','median','kernel','on','newfig','no'); title('incongruency scores')
 subplot(2,9,[16:18]);   
 [RTsM,RTsCI]       = rst_data_plot(RTs(:,[2 3 4]) -repmat(RTs(:,1),[1 3]), 'estimator','median','kernel','on','newfig','no'); title('incongruency reaction times')
