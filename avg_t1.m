@@ -101,6 +101,24 @@ wc1_average = mean(wc1_data,4);
 wc2_average = mean(wc2_data,4);
 wc3_average = mean(wc3_data,4);
 
+wc1_out = wc1_headers(1);
+wc1_out.fname = [bids_dir filesep 'derivatives' filesep 'group' filesep 'wc1_mean_healthy_t1avg.nii'];
+wc1_out.descrip = 'Average wc1 of 16 healthy normalised controls';
+wc1_out.private.descrip = wc1_out.descrip;
+spm_write_vol(wc1_out, wc1_average);
+
+wc2_out = wc2_headers(1);
+wc2_out.fname = [bids_dir filesep 'derivatives' filesep 'group' filesep 'wc2_mean_healthy_t1avg.nii'];
+wc2_out.descrip = 'Average wc2 of 16 healthy normalised controls';
+wc2_out.private.descrip = wc2_out.descrip;
+spm_write_vol(wc2_out, wc2_average);
+
+wc3_out = wc3_headers(1);
+wc3_out.fname = [bids_dir filesep 'derivatives' filesep 'group' filesep 'wc3_mean_healthy_t1avg.nii'];
+wc3_out.descrip = 'Average wc3 of 16 healthy normalised controls';
+wc3_out.private.descrip = wc3_out.descrip;
+spm_write_vol(wc3_out, wc3_average);
+
 %spm_surf([wc1_images; wc2_images], 3);
 
 t1_surf = (wc1_average + wc2_average) .* (t1_average - ((wc1_average + wc2_average + wc3_average))>0);
@@ -123,4 +141,5 @@ W.descrip = 'Average of 16 healthy normalized T1 controls';
 W.private.descrip = W.descrip;
 spm_write_vol(W,t1_surf);
 
-spm_surf(W.fname, 3);
+P = [wc1_out.fname; wc2_out.fname];
+spm_surf(P, 3, 0.6);
