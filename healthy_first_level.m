@@ -344,13 +344,12 @@ for subject = 1:size(subj,1)
         matlabbatch{4}.spm.stats.con.consess{9}.tcon.weights = [-1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0];
         matlabbatch{4}.spm.stats.con.consess{9}.tcon.sessrep = 'none';
         matlabbatch{4}.spm.stats.con.delete = 0;
-        
+
         try
             stat_batch = spm_jobman('run',matlabbatch);
         catch exc
            warning('Could not calculate stats for %s - %s', subj(subject).name, exc.message);
-           cd(bids_dir);
-           clear matlabbatch;
+           cd(bids_dir); clear matlabbatch;
            continue;
         end
         
@@ -386,6 +385,67 @@ for subject = 1:size(subj,1)
             filesep subj(subject).name filesep 'boosted_stats' filesep 'SPM.mat']);
         spmup_smooth_boostedfiles(boosted_files{1},[5 5 5]); % smooth boosted beta files
         spmup_smooth_boostedfiles(boosted_files{2},[5 5 5]); % smooth boosted con files
+        clear matlabbatch;
+        
+        
+        
+        %% Functional connectivity - generate beta maps for each trial
+        matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = stat_batch{1}.dir
+        matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'trial_betas';
+
+        matlabbatch{2}.spm.stats.fmri_spec.dir(1) = ...
+            cfg_dep('Make Directory: Make Directory ''trial_betas''', ...
+            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','dir'));
+        matlabbatch{2}.spm.stats.fmri_spec.timing.units = 'secs';
+        matlabbatch{2}.spm.stats.fmri_spec.timing.RT = 2.5;
+        matlabbatch{2}.spm.stats.fmri_spec.timing.fmri_t = 30;
+        matlabbatch{2}.spm.stats.fmri_spec.timing.fmri_t0 = 15;
+        for f=1:size(preprocess{11}.files,1)
+            matlabbatch{2}.spm.stats.fmri_spec.sess.scans(f,:) = preprocess{11}.files(f);
+        end
+
+        % Put trials in order per block
+        for cond = 1:4
+            if cond == 1
+                cond_onsets = [fmri_events.Onset(fmri_events.Condition==cond)];
+            else 
+                cond_onsets = [cond_onsets; fmri_events.Onset(fmri_events.Condition==cond)];
+            end
+        end
+        
+        % Assign onset to sorted trials, each trial is a condition
+        for trial = 1:120
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(trial).name = ['trial_' num2str(trial)];
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(trial).onset = cond_onsets(trial);
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(trial).duration = 0;
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(trial).tmod = 0;
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(trial).pmod.name = 'RT';
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(trial).pmod.param = 0;
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(trial).pmod.poly = 1;
+            matlabbatch{2}.spm.stats.fmri_spec.sess.cond(trial).orth = 1;
+        end
+
+        matlabbatch{2}.spm.stats.fmri_spec.sess.multi = {''};
+        matlabbatch{2}.spm.stats.fmri_spec.sess.regress = struct('name', {}, 'val', {});
+        %matlabbatch{2}.spm.stats.fmri_spec.sess.multi_reg(1) = {new_file};
+        matlabbatch{2}.spm.stats.fmri_spec.sess.hpf = 128;
+        matlabbatch{2}.spm.stats.fmri_spec.fact = struct('name', {}, 'levels', {});
+        matlabbatch{2}.spm.stats.fmri_spec.bases.hrf.derivs = [1 0];
+        matlabbatch{2}.spm.stats.fmri_spec.volt = 1;
+        matlabbatch{2}.spm.stats.fmri_spec.global = 'None';
+        matlabbatch{2}.spm.stats.fmri_spec.mthresh = 0.8;
+        matlabbatch{2}.spm.stats.fmri_spec.mask = {''};
+        matlabbatch{2}.spm.stats.fmri_spec.cvi = 'AR(1)';
+
+        matlabbatch{3}.spm.stats.fmri_est.spmmat(1) = ...
+            cfg_dep('fMRI model specification: SPM.mat File', ...
+            substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+            substruct('.','spmmat'));
+        matlabbatch{3}.spm.stats.fmri_est.write_residuals = 0;
+        matlabbatch{3}.spm.stats.fmri_est.method.Classical = 1;
+        
+        trial_betas_batch = spm_jobman('run', matlabbatch);
         clear matlabbatch;
         cd(bids_dir);
     end
