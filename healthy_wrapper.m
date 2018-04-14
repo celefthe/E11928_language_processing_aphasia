@@ -8,4 +8,6 @@ healthy_first_level;
 cd(code_dir);
 healthy_second_level;
 cd(code_dir);
+avg_t1;
+cd(code_dir);
 healthy_behaviour;
