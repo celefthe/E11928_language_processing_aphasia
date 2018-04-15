@@ -480,29 +480,13 @@ for subject = 1:size(subj,1)
     
     % Get drift rate per condition for regressions
     % same value for each trial in condition
-    drift_ss = [];
-    for idx = 1:30
-        subj_v = [participants.drifratess_sess_1(subject); 0; 0; 0];
-        drift_ss = [drift_ss ; subj_v];
-    end
+    drift_ss = [repmat(participants.drifratess_sess_1(subject), 30, 1); zeros(90,1)];
+
+    drift_cp = [zeros(30,1); repmat(participants.drifratecp_sess_1(subject), 30, 1); zeros(60,1)];
     
-    drift_cp = [];
-    for idx = 1:30
-        subj_v = [0; participants.drifratecp_sess_1(subject); 0; 0];
-        drift_cp = [drift_cp ; subj_v];
-    end
+    drift_cs = [zeros(60,1); repmat(participants.drifratecs_sess_1(subject), 30, 1); zeros(30,1)];
     
-    drift_cs = [];
-    for idx = 1:30
-        subj_v = [0; 0; participants.drifratecs_sess_1(subject); 0];
-        drift_cs = [drift_cs ; subj_v];
-    end
-    
-    drift_us = [];
-    for idx = 1:30
-        subj_v = [0; 0; 0; participants.drifrateus_sess_1(subject)];
-        drift_us = [drift_us ; subj_v];
-    end
+    drift_us = [zeros(90,1); repmat(participants.drifrateus_sess_1(subject), 30, 1)];
     
     
     matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
@@ -583,24 +567,11 @@ for subject = 1:size(subj,1)
     
     % Get drift rate per condition for regressions
     % same value for each trial in condition
-    dprime_phonetic = [];
-    for idx = 1:30
-        dprime = [participants.dprimephono_sess_1(subject); 0; 0];
-        dprime_phonetic = [dprime_phonetic ; dprime];
-    end
+    dprime_phonetic = [ones(30,1); repmat(participants.dprimephono_sess_1(subject), 30, 1); zeros(60,1)];
+
+    dprime_semantic = [ones(30,1); zeros(30,1); repmat(participants.dprimesem_sess_1(subject), 30, 1); zeros(30,1)];
     
-    dprime_semantic = [];
-    for idx = 1:30
-        dprime = [0; participants.dprimesem_sess_1(subject); 0];
-        dprime_semantic = [dprime_semantic ; dprime];
-    end
-    
-    dprime_unrelated = [];
-    for idx = 1:30
-        dprime = [0; 0; participants.dprimeunrelated_sess_1(subject)];
-        dprime_unrelated = [dprime_unrelated ; dprime];
-    end
-    
+    dprime_unrelated = [ones(30,1); zeros(60,1); repmat(participants.dprimeunrelated_sess_1(subject), 30, 1)];
     
     matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
         {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
@@ -610,10 +581,10 @@ for subject = 1:size(subj,1)
         cfg_dep('Make Directory: Make Directory ''connectivity''', ...
         substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
         substruct('.','dir'));
-    matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'drift_rate';
+    matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence_overall';
     
     matlabbatch{3}.spm.stats.factorial_design.dir = ...
-        cfg_dep('Make Directory: Make Directory ''drift_rate''', ...
+        cfg_dep('Make Directory: Make Directory ''incongruence_overall''', ...
         substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
         substruct('.','dir'));
     
@@ -624,7 +595,7 @@ for subject = 1:size(subj,1)
     end
     
     % Multiple regression w/ incongruences + mean ROIs signal per trial
-    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).c = dprime_semantic;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).c = dprime_phonetic;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).cname = 'phonetic';
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).iCC = 1;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).c = dprime_semantic;
@@ -653,7 +624,7 @@ for subject = 1:size(subj,1)
     matlabbatch{4}.spm.stats.fmri_est.write_residuals = 0;
     matlabbatch{4}.spm.stats.fmri_est.method.Classical = 1;
     
-    conn_drift_batch = spm_jobman('run', matlabbatch);
+    conn_incong_batch = spm_jobman('run', matlabbatch);
     clear matlabbatch;
      
 
@@ -717,7 +688,7 @@ for subject = 1:size(subj,1)
         end
     end
     
-    semantic_signal = mean(signals.semantic, 2);  % mean signal per trial / row
+    unrelated_signal = mean(signals.unrelated, 2);  % mean signal per trial / row
     
     
     matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
@@ -742,13 +713,13 @@ for subject = 1:size(subj,1)
     end
     
     % Multiple regression w/ mean ROIs signal per trial
-    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).c = signals.phonetic;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).c = phonetic_signal;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).cname = 'phonetic';
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).iCC = 1;
-    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).c = signals.semantic;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).c = semantic_signal;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).cname = 'semantic';
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).iCC = 1;
-    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).c = signals.unrelated;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).c = unrelated_signal;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).cname = 'unrelated';
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).iCC = 1;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.incint = 1;
@@ -768,7 +739,7 @@ for subject = 1:size(subj,1)
     matlabbatch{4}.spm.stats.fmri_est.write_residuals = 0;
     matlabbatch{4}.spm.stats.fmri_est.method.Classical = 1;
     
-    conn_incong_batch = spm_jobman('run', matlabbatch);
+    conn_incong2_batch = spm_jobman('run', matlabbatch);
     clear matlabbatch;
 
     
