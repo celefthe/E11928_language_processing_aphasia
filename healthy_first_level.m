@@ -562,21 +562,11 @@ for subject = 1:size(subj,1)
     conn_drift_batch = spm_jobman('run', matlabbatch);
     clear matlabbatch;
     
-
-    %% Functional connectivity - Regression with incongruence ROI signal
     
-    % ROI coordinates in MNI space are [26 -8 50] and [-30 0 58]
-    % In SPM XYZ space, these translate to [27; 53; 61] and [55; 57; 65]
-    % >> coords = spm_XYZreg('GetCoords', hReg);
-    % >> [xyz,i] = spm_XYZreg('NearestXYZ', coords, xSPM.XYZmm)
-    % >> XYZ     = xSPM.XYZ(:,i)
-    beta_range = 1:120;  % 120 trial betas
-    trial_betas = trial_betas_batch{3}.beta(beta_range);
-    
-    % ROI coordinates
-    rois = {
-        [27; 53; 61]
-        [55; 57; 65]
+     %% Functional connectivity - Regression with overall incongruence in relation to d'
+     % ROI coordinates in MNI space are [-44 -58 48] --> [62; 28; 60]
+     rois = {
+        [62; 28; 60]
         };
     
     signals = [];
@@ -591,6 +581,26 @@ for subject = 1:size(subj,1)
     
     mean_roi_signal = mean(signals, 2);  % mean signal per trial / row
     
+    % Get drift rate per condition for regressions
+    % same value for each trial in condition
+    dprime_phonetic = [];
+    for idx = 1:30
+        dprime = [participants.dprimephono_sess_1(subject); 0; 0];
+        dprime_phonetic = [dprime_phonetic ; dprime];
+    end
+    
+    dprime_semantic = [];
+    for idx = 1:30
+        dprime = [0; participants.dprimesem_sess_1(subject); 0];
+        dprime_semantic = [dprime_semantic ; dprime];
+    end
+    
+    dprime_unrelated = [];
+    for idx = 1:30
+        dprime = [0; 0; participants.dprimeunrelated_sess_1(subject)];
+        dprime_unrelated = [dprime_unrelated ; dprime];
+    end
+    
     
     matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
         {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
@@ -600,10 +610,10 @@ for subject = 1:size(subj,1)
         cfg_dep('Make Directory: Make Directory ''connectivity''', ...
         substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
         substruct('.','dir'));
-    matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence';
+    matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'drift_rate';
     
     matlabbatch{3}.spm.stats.factorial_design.dir = ...
-        cfg_dep('Make Directory: Make Directory ''incongruence''', ...
+        cfg_dep('Make Directory: Make Directory ''drift_rate''', ...
         substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
         substruct('.','dir'));
     
@@ -613,14 +623,132 @@ for subject = 1:size(subj,1)
         matlabbatch{3}.spm.stats.factorial_design.des.mreg.scans(end+1,:) = {cell2mat(trial_betas_batch{3}.beta(idx))};
     end
     
-    % Multiple regression w/ conditions + mean ROIs signal per trial
-    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).c = drift_ss;
+    % Multiple regression w/ incongruences + mean ROIs signal per trial
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).c = dprime_semantic;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).cname = 'phonetic';
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).iCC = 1;
-    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).c = drift_cp;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).c = dprime_semantic;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).cname = 'semantic';
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).iCC = 1;
-    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).c = drift_cs;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).c = dprime_unrelated;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).cname = 'unrelated';
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).iCC = 1;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(4).c = mean_roi_signal;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(4).cname = 'roi_signal';
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(4).iCC = 1;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.incint = 1;
+    matlabbatch{3}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+    matlabbatch{3}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+    matlabbatch{3}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+    matlabbatch{3}.spm.stats.factorial_design.masking.im = 1;
+    matlabbatch{3}.spm.stats.factorial_design.masking.em = {''};
+    matlabbatch{3}.spm.stats.factorial_design.globalc.g_omit = 1;
+    matlabbatch{3}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+    matlabbatch{3}.spm.stats.factorial_design.globalm.glonorm = 1;
+    
+    matlabbatch{4}.spm.stats.fmri_est.spmmat(1) = ...
+        cfg_dep('Factorial design specification: SPM.mat File', ...
+        substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+        substruct('.','spmmat'));
+    matlabbatch{4}.spm.stats.fmri_est.write_residuals = 0;
+    matlabbatch{4}.spm.stats.fmri_est.method.Classical = 1;
+    
+    conn_drift_batch = spm_jobman('run', matlabbatch);
+    clear matlabbatch;
+     
+
+    %% Functional connectivity - Regression with different incongruence ROI signals
+    
+    % ROI coordinates in MNI space are:
+    % - phonetic  :: [-44 -58 50] --> [62; 28; 61]
+    % - semantic  :: [-44 -58 48] --> [62; 28; 60]
+    % - unrelated :: [-44 -58 48] --> [62; 28; 60]
+    %             :: [ -4  40 22] --> [42; 77; 47]
+    %             :: [ -2   8 44] --> [41; 61; 58]
+    rois = struct();
+    rois.phonetic = {
+        [62; 28; 61]
+        };
+    rois.semantic = {
+        [62; 28; 60]
+        };
+    rois.unrelated = {
+        [62; 28; 60]
+        [42; 77; 47]
+        [41; 61; 58]
+        };
+    
+    signals = struct();
+    
+    % phonetic roi signal
+    signals.phonetic = [];
+    for idx = 1:length(rois.phonetic)
+        roi_signals = spm_get_data(trial_betas, rois.phonetic{idx});
+        if idx == 1
+            signals.phonetic = roi_signals;
+        else
+            signals.phonetic = [signals.phonetic roi_signals];
+        end
+    end
+    
+    phonetic_signal = mean(signals.phonetic, 2);  % mean signal per trial / row
+    
+    % semantic roi signal
+    signals.semantic = [];
+    for idx = 1:length(rois.semantic)
+        roi_signals = spm_get_data(trial_betas, rois.semantic{idx});
+        if idx == 1
+            signals.semantic = roi_signals;
+        else
+            signals.semantic = [signals.semantic roi_signals];
+        end
+    end
+    
+    semantic_signal = mean(signals.semantic, 2);  % mean signal per trial / row
+    
+    % unrelated roi signal
+    signals.unrelated = [];
+    for idx = 1:length(rois.unrelated)
+        roi_signals = spm_get_data(trial_betas, rois.unrelated{idx});
+        if idx == 1
+            signals.unrelated = roi_signals;
+        else
+            signals.unrelated = [signals.unrelated roi_signals];
+        end
+    end
+    
+    semantic_signal = mean(signals.semantic, 2);  % mean signal per trial / row
+    
+    
+    matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
+        {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
+    matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'connectivity';
+    
+    matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
+        cfg_dep('Make Directory: Make Directory ''connectivity''', ...
+        substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+        substruct('.','dir'));
+    matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence_indv';
+    
+    matlabbatch{3}.spm.stats.factorial_design.dir = ...
+        cfg_dep('Make Directory: Make Directory ''incongruence_indv''', ...
+        substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+        substruct('.','dir'));
+    
+    % Get trial betas
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.scans = {};
+    for idx = 1:120
+        matlabbatch{3}.spm.stats.factorial_design.des.mreg.scans(end+1,:) = {cell2mat(trial_betas_batch{3}.beta(idx))};
+    end
+    
+    % Multiple regression w/ mean ROIs signal per trial
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).c = signals.phonetic;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).cname = 'phonetic';
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(1).iCC = 1;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).c = signals.semantic;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).cname = 'semantic';
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(2).iCC = 1;
+    matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).c = signals.unrelated;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).cname = 'unrelated';
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.mcov(3).iCC = 1;
     matlabbatch{3}.spm.stats.factorial_design.des.mreg.incint = 1;
