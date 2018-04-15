@@ -393,6 +393,7 @@ for subject = 1:size(subj,1)
     %------------------------------------------------------------%
     % Functional Connectivity Analysis - ROIs from 2nd level     %
     %------------------------------------------------------------%
+    
     %% Functional connectivity - generate beta maps for each trial
     matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = stat_batch{1}.dir;
     matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'trial_betas';
@@ -453,7 +454,7 @@ for subject = 1:size(subj,1)
     %% Functional connectivity - Regression with drift rate ROI signal
     
     % ROI coordinates in MNI space are [26 -8 50] and [-30 0 58]
-    % In SPM XYZ space, these translate to [27; 53; 61] and [55; 57; 65]
+    % In SPM XYZ space, these translate to [27 53 61] and [55 57 65]
     % >> coords = spm_XYZreg('GetCoords', hReg);
     % >> [xyz,i] = spm_XYZreg('NearestXYZ', coords, xSPM.XYZmm)
     % >> XYZ     = xSPM.XYZ(:,i)
@@ -462,13 +463,16 @@ for subject = 1:size(subj,1)
     
     % ROI coordinates
     rois = {
-        [27; 53; 61]
-        [55; 57; 65]
+        [27 53 61]
+        [55 57 65]
         };
     
     signals = [];
     for idx = 1:length(rois)
-        roi_signals = spm_get_data(trial_betas, rois{idx});
+        % mean signal from 8mm sphere
+        roi_signals = spm_summarise(trial_betas,...
+            struct('def','sphere', 'spec',8, 'xyz',rois{idx}'),...
+            @mean);
         if idx == 1
             signals = roi_signals;
         else
@@ -480,13 +484,13 @@ for subject = 1:size(subj,1)
     
     % Get drift rate per condition for regressions
     % same value for each trial in condition
-    drift_ss = [repmat(participants.drifratess_sess_1(subject), 30, 1); zeros(90,1)];
+    drift_ss = [ones(30,1); zeros(90,1)];
 
-    drift_cp = [zeros(30,1); repmat(participants.drifratecp_sess_1(subject), 30, 1); zeros(60,1)];
+    drift_cp = [zeros(30,1); ones(30,1); zeros(60,1)];
     
-    drift_cs = [zeros(60,1); repmat(participants.drifratecs_sess_1(subject), 30, 1); zeros(30,1)];
+    drift_cs = [zeros(60,1); ones(30,1); zeros(30,1)];
     
-    drift_us = [zeros(90,1); repmat(participants.drifrateus_sess_1(subject), 30, 1)];
+    drift_us = [zeros(90,1); ones(30,1)];
     
     
     matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
@@ -548,14 +552,16 @@ for subject = 1:size(subj,1)
     
     
      %% Functional connectivity - Regression with overall incongruence in relation to d'
-     % ROI coordinates in MNI space are [-44 -58 48] --> [62; 28; 60]
+     % ROI coordinates in MNI space are [-44 -58 48] --> [62 28 60]
      rois = {
-        [62; 28; 60]
+        [62 28 60]
         };
     
     signals = [];
     for idx = 1:length(rois)
-        roi_signals = spm_get_data(trial_betas, rois{idx});
+        roi_signals = spm_summarise(trial_betas,...
+            struct('def','sphere', 'spec',8, 'xyz',rois{idx}'),...
+            @mean);
         if idx == 1
             signals = roi_signals;
         else
@@ -567,11 +573,11 @@ for subject = 1:size(subj,1)
     
     % Get drift rate per condition for regressions
     % same value for each trial in condition
-    dprime_phonetic = [ones(30,1); repmat(participants.dprimephono_sess_1(subject), 30, 1); zeros(60,1)];
+    dprime_phonetic = [ones(30,1); ones(30,1); zeros(60,1)];
 
-    dprime_semantic = [ones(30,1); zeros(30,1); repmat(participants.dprimesem_sess_1(subject), 30, 1); zeros(30,1)];
+    dprime_semantic = [ones(30,1); zeros(30,1); ones(30,1); zeros(30,1)];
     
-    dprime_unrelated = [ones(30,1); zeros(60,1); repmat(participants.dprimeunrelated_sess_1(subject), 30, 1)];
+    dprime_unrelated = [ones(30,1); zeros(60,1); ones(30,1)];
     
     matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
         {[bids_dir filesep 'derivatives' filesep subj(subject).name]};
@@ -631,22 +637,22 @@ for subject = 1:size(subj,1)
     %% Functional connectivity - Regression with different incongruence ROI signals
     
     % ROI coordinates in MNI space are:
-    % - phonetic  :: [-44 -58 50] --> [62; 28; 61]
-    % - semantic  :: [-44 -58 48] --> [62; 28; 60]
-    % - unrelated :: [-44 -58 48] --> [62; 28; 60]
-    %             :: [ -4  40 22] --> [42; 77; 47]
-    %             :: [ -2   8 44] --> [41; 61; 58]
+    % - phonetic  :: [-44 -58 50] --> [62 28 61]
+    % - semantic  :: [-44 -58 48] --> [62 28 60]
+    % - unrelated :: [-44 -58 48] --> [62 28 60]
+    %             :: [ -4  40 22] --> [42 77 47]
+    %             :: [ -2   8 44] --> [41 61 58]
     rois = struct();
     rois.phonetic = {
-        [62; 28; 61]
+        [62 28 61]
         };
     rois.semantic = {
-        [62; 28; 60]
+        [62 28 60]
         };
     rois.unrelated = {
-        [62; 28; 60]
-        [42; 77; 47]
-        [41; 61; 58]
+        [62 28 60]
+        [42 77 47]
+        [41 61 58]
         };
     
     signals = struct();
@@ -654,7 +660,9 @@ for subject = 1:size(subj,1)
     % phonetic roi signal
     signals.phonetic = [];
     for idx = 1:length(rois.phonetic)
-        roi_signals = spm_get_data(trial_betas, rois.phonetic{idx});
+        roi_signals = spm_summarise(trial_betas,...
+            struct('def','sphere', 'spec',8, 'xyz',rois{idx}'),...
+            @mean);
         if idx == 1
             signals.phonetic = roi_signals;
         else
@@ -667,7 +675,9 @@ for subject = 1:size(subj,1)
     % semantic roi signal
     signals.semantic = [];
     for idx = 1:length(rois.semantic)
-        roi_signals = spm_get_data(trial_betas, rois.semantic{idx});
+        roi_signals = spm_summarise(trial_betas,...
+            struct('def','sphere', 'spec',8, 'xyz',rois{idx}'),...
+            @mean);
         if idx == 1
             signals.semantic = roi_signals;
         else
@@ -680,7 +690,9 @@ for subject = 1:size(subj,1)
     % unrelated roi signal
     signals.unrelated = [];
     for idx = 1:length(rois.unrelated)
-        roi_signals = spm_get_data(trial_betas, rois.unrelated{idx});
+        roi_signals = spm_summarise(trial_betas,...
+            struct('def','sphere', 'spec',8, 'xyz',rois{idx}'),...
+            @mean);
         if idx == 1
             signals.unrelated = roi_signals;
         else
