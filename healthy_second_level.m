@@ -1116,6 +1116,162 @@ matlabbatch{22}.spm.stats.con.delete = 1;
 
 % run batch
 regressor_batch = spm_jobman('run',matlabbatch);
+clear matlabbatch
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Part 4: Functional Connectivity    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = task_hrf_batch{2}.dir;
+matlabbatch{1}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'connectivity';
+
+
+%% One-sample t-test for drift rate ROIs
+matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
+    cfg_dep('Make Directory: Make Directory ''connectivity''', ...
+    substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{2}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'drift_rate';
+
+matlabbatch{3}.spm.stats.factorial_design.dir = ...
+    cfg_dep('Make Directory: Make Directory ''drift_rate''', ...
+    substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{3}.spm.stats.factorial_design.des.t1.scans = {};
+for idx = 1:size(subj,1)
+    matlabbatch{3}.spm.stats.factorial_design.des.t1.scans(end+1,:) = {
+        [subjects{idx}.path filesep 'connectivity' filesep 'drift_rate' filesep 'beta_0006.nii,1']
+    };
+end
+matlabbatch{3}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{3}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{3}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{3}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{3}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{3}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{3}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{3}.spm.stats.factorial_design.globalm.glonorm = 1;
+
+matlabbatch{4}.spm.stats.fmri_est.spmmat(1) = ...
+    cfg_dep('Factorial design specification: SPM.mat File', ...
+    substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{4}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{4}.spm.stats.fmri_est.method.Classical = 1;
+
+matlabbatch{5}.spm.stats.con.spmmat(1) = ...
+    cfg_dep('Model estimation: SPM.mat File', ...
+    substruct('.','val', '{}',{4}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{5}.spm.stats.con.consess{1}.tcon.name = 'signal+';
+matlabbatch{5}.spm.stats.con.consess{1}.tcon.weights = [1];
+matlabbatch{5}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{5}.spm.stats.con.consess{2}.tcon.name = 'signal-';
+matlabbatch{5}.spm.stats.con.consess{2}.tcon.weights = [-1];
+matlabbatch{5}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
+
+matlabbatch{5}.spm.stats.con.delete = 1;
+
+
+%% One-sample t-test for overall incongruence ROIs
+
+matlabbatch{6}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
+    cfg_dep('Make Directory: Make Directory ''connectivity''', ...
+    substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{6}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence_overall';
+
+matlabbatch{7}.spm.stats.factorial_design.dir = ...
+    cfg_dep('Make Directory: Make Directory ''incongruence_overall''', ...
+    substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{7}.spm.stats.factorial_design.des.t1.scans = {};
+for idx = 1:size(subj,1)
+    matlabbatch{7}.spm.stats.factorial_design.des.t1.scans(end+1,:) = {
+        [subjects{idx}.path filesep 'connectivity' filesep 'incongruence_overall' filesep 'beta_0005.nii,1']
+    };
+end
+matlabbatch{7}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{7}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{7}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{7}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{7}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{7}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{7}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{7}.spm.stats.factorial_design.globalm.glonorm = 1;
+
+matlabbatch{8}.spm.stats.fmri_est.spmmat(1) = ...
+    cfg_dep('Factorial design specification: SPM.mat File', ...
+    substruct('.','val', '{}',{7}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{8}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{8}.spm.stats.fmri_est.method.Classical = 1;
+
+matlabbatch{9}.spm.stats.con.spmmat(1) = ...
+    cfg_dep('Model estimation: SPM.mat File', ...
+    substruct('.','val', '{}',{8}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{9}.spm.stats.con.consess{1}.tcon.name = 'signal+';
+matlabbatch{9}.spm.stats.con.consess{1}.tcon.weights = [1];
+matlabbatch{9}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{9}.spm.stats.con.consess{2}.tcon.name = 'signal-';
+matlabbatch{9}.spm.stats.con.consess{2}.tcon.weights = [-1];
+matlabbatch{9}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
+
+matlabbatch{9}.spm.stats.con.delete = 1;
+
+
+%% One-sample t-test for individual incongruence ROIs
+
+matlabbatch{6}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.parent = ...
+    cfg_dep('Make Directory: Make Directory ''connectivity''', ...
+    substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{6}.cfg_basicio.file_dir.dir_ops.cfg_mkdir.name = 'incongruence_overall';
+
+matlabbatch{7}.spm.stats.factorial_design.dir = ...
+    cfg_dep('Make Directory: Make Directory ''incongruence_overall''', ...
+    substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','dir'));
+matlabbatch{7}.spm.stats.factorial_design.des.t1.scans = {};
+for idx = 1:size(subj,1)
+    matlabbatch{7}.spm.stats.factorial_design.des.t1.scans(end+1,:) = {
+        [subjects{idx}.path filesep 'connectivity' filesep 'incongruence_overall' filesep 'beta_0005.nii,1']
+    };
+end
+matlabbatch{7}.spm.stats.factorial_design.cov = struct('c', {}, 'cname', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{7}.spm.stats.factorial_design.multi_cov = struct('files', {}, 'iCFI', {}, 'iCC', {});
+matlabbatch{7}.spm.stats.factorial_design.masking.tm.tm_none = 1;
+matlabbatch{7}.spm.stats.factorial_design.masking.im = 1;
+matlabbatch{7}.spm.stats.factorial_design.masking.em = {''};
+matlabbatch{7}.spm.stats.factorial_design.globalc.g_omit = 1;
+matlabbatch{7}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
+matlabbatch{7}.spm.stats.factorial_design.globalm.glonorm = 1;
+
+matlabbatch{8}.spm.stats.fmri_est.spmmat(1) = ...
+    cfg_dep('Factorial design specification: SPM.mat File', ...
+    substruct('.','val', '{}',{7}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{8}.spm.stats.fmri_est.write_residuals = 0;
+matlabbatch{8}.spm.stats.fmri_est.method.Classical = 1;
+
+matlabbatch{9}.spm.stats.con.spmmat(1) = ...
+    cfg_dep('Model estimation: SPM.mat File', ...
+    substruct('.','val', '{}',{8}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+    substruct('.','spmmat'));
+matlabbatch{9}.spm.stats.con.consess{1}.tcon.name = 'signal+';
+matlabbatch{9}.spm.stats.con.consess{1}.tcon.weights = [1];
+matlabbatch{9}.spm.stats.con.consess{1}.tcon.sessrep = 'none';
+matlabbatch{9}.spm.stats.con.consess{2}.tcon.name = 'signal-';
+matlabbatch{9}.spm.stats.con.consess{2}.tcon.weights = [-1];
+matlabbatch{9}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
+
+matlabbatch{9}.spm.stats.con.delete = 1;
+
+% run connectivity batch
+connectivity_batch = spm_jobman('run',matlabbatch);
+clear matlabbatch
 
 % go back to bids code dir
 cd(current)
